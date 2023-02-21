@@ -44,6 +44,7 @@ def run():
         graph.GraphGenerator("g" + str(idx), **gen_args).gen_dag_graph()
         for idx, gen_args in enumerate(gen_args_list)
     ]
+    print(len(graph_list))
     # nx.draw(graph_list[0].g)
     # f = open("../../cases/a.yaml")
     # graph_list = graph.ExecutionGraph.load_all(f)

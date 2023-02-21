@@ -145,6 +145,9 @@ class ProvisionNode:
                     self.slot_diff -= 1
             self.unscheduled_graphs = []
 
+        if len(self.unscheduled_graphs) == 0:
+            return
+
         topological_sorted_graphs = [
             g.topological_order_with_upstream_bd() for g in self.unscheduled_graphs
         ]
@@ -212,7 +215,7 @@ class ProvisionNode:
         for child_idx, child_slots in sorted(
             enumerate(self.children_slots), key=lambda e: e[1], reverse=True
         ):
-            if child_slots == 0:
+            if child_slots == 0 or len(self.unscheduled_graphs) == 0:
                 continue
             topological_sorted_graphs = [
                 g.topological_order_with_upstream_bd() for g in self.unscheduled_graphs

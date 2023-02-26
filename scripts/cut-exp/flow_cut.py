@@ -8,7 +8,7 @@ import coloredlogs
 from algo import min_cut, min_cut2
 from graph import ExecutionGraph
 from topo import Domain, Scenario
-from utils import gen_uuid, grouped_exactly_one_binpack
+from utils import gen_uuid, grouped_exactly_one_full_binpack
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level="debug", logger=logger)
@@ -74,7 +74,7 @@ def flow_cut(
                 [(len(option.s_cut), option.flow) for option in options]
                 for options in graph_cut_options
             ]
-            solution = grouped_exactly_one_binpack(free_slots, groups)
+            solution = grouped_exactly_one_full_binpack(free_slots, groups)
             s_cut_list: typing.List[typing.Set[str]] = [
                 options[s_idx].s_cut
                 for options, s_idx in zip(graph_cut_options, solution)

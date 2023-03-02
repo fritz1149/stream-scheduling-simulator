@@ -8,7 +8,7 @@ param flow_incidence{flow_nodes, flow_edges}, integer; #流式计算图的关联
 param mi, >0; #算子平均每条数据所需算力
 param flow{flow_edges}, >0; #流式计算边流量
 param flow_node_is_sink{flow_nodes}, binary;
-param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
+# param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
 param in_flow_edge{flow_nodes, flow_edges}, binary; #算子的入边
 param flow_edge_s{flow_edges}, symbolic in flow_nodes, >0; #流式计算边起点
 ## 实际网络相关

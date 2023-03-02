@@ -21,6 +21,12 @@ def run():
     sc = topo.Scenario.from_dict(
         yaml.load(open("../../samples/1e3h.yaml", "r").read(), Loader=yaml.Loader)
     )
+    print(sc.topo.g.nodes)
+    print(sc.topo.g.edges)
+    for domain in sc.domains:
+        print("domain: %s"%domain.name)
+        print(domain.topo.g.nodes)
+    return
     source_selector = graph.SourceSelector({"rasp1": 4, "rasp2": 4, "rasp3": 4})
     gen_args_list = [
         {

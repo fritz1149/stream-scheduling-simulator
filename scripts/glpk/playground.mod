@@ -1,8 +1,3 @@
-set I;
-param x symbolic in I;
+param a := 5;
+set I := 0..a-1;
 display I;
-display x;
-
-data;
-set I := a b c d e;
-param x := a;

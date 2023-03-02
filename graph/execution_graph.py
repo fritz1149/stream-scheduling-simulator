@@ -46,7 +46,8 @@ class ExecutionGraph:
         self, v_from: Vertex, v_to: Vertex, unit_size: int, per_second: int
     ) -> None:
         self.g.add_edge(
-            v_from.uuid, v_to.uuid, unit_size=unit_size, per_second=per_second
+            v_from.uuid, v_to.uuid, unit_size=unit_size, per_second=per_second,
+            flow = unit_size * per_second
         )
         self.g.nodes[v_to.uuid]["upstream_bd"] += unit_size * per_second
         self.g.nodes[v_from.uuid]["downstream_bd"] += unit_size * per_second

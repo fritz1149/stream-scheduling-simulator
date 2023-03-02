@@ -21,12 +21,6 @@ def run():
     sc = topo.Scenario.from_dict(
         yaml.load(open("../../samples/1e3h.yaml", "r").read(), Loader=yaml.Loader)
     )
-    print(sc.topo.g.nodes)
-    print(sc.topo.g.edges)
-    for domain in sc.domains:
-        print("domain: %s"%domain.name)
-        print(domain.topo.g.nodes)
-    return
     source_selector = graph.SourceSelector({"rasp1": 4, "rasp2": 4, "rasp3": 4})
     gen_args_list = [
         {
@@ -50,7 +44,6 @@ def run():
         graph.GraphGenerator("g" + str(idx), **gen_args).gen_dag_graph()
         for idx, gen_args in enumerate(gen_args_list)
     ]
-    print(len(graph_list))
     # nx.draw(graph_list[0].g)
     # f = open("../../cases/a.yaml")
     # graph_list = graph.ExecutionGraph.load_all(f)
@@ -59,6 +52,11 @@ def run():
     with open("../../cases/a.yaml", "w") as f:
         graph.ExecutionGraph.save_all(graph_list, f)
 
+    sc.topo.clear_occupied()
+    dynamic_scheduler = sch.DynamicScheduler(sc)
+    dynamic_scheduler.schedule_multiple(graph_list)
+    return
+    
     sc.topo.clear_occupied()
     flow_scheduler = sch.FlowScheduler(sc)
     flow_scheduler.logger.setLevel(logging.INFO)

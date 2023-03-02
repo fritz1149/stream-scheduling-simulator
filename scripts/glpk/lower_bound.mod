@@ -2,10 +2,10 @@
 ## 流式计算图相关
 param flow_node_num, integer, >0; #算子数量
 param flow_edge_num, integer, >0; #流式边数量
-set flow_nodes := 1..flow_node_num;
-set flow_edges := 1..flow_edge_num;
+set flow_nodes := 0..flow_node_num-1;
+set flow_edges := 0..flow_edge_num-1;
 param flow_incidence{flow_nodes, flow_edges}, integer; #流式计算图的关联矩阵
-param mi, >0; #算子平均每条数据所需算力
+param mi{flow_nodes}, >0; #算子平均每条数据所需算力
 param flow{flow_edges}, >0; #流式计算边流量
 param flow_node_is_sink{flow_nodes}, binary;
 # param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
@@ -16,10 +16,10 @@ param net_node_num, integer, >0; #计算节点数量
 param net_edge_num, integer, >0; #网络边数量
 param net_path_num, integer, >0; #网络链路数量
 param edge_domain_num, integer, >0; #边缘域数量
-set net_nodes := 1..net_node_num;
-set net_edges := 1..net_edge_num;
-set net_paths := 1..net_path_num;
-set edge_domains := 1..edge_domain_num;
+set net_nodes := 0..net_node_num-1;
+set net_edges := 0..net_edge_num-1;
+set net_paths := 0..net_path_num-1;
+set edge_domains := 0..edge_domain_num-1;
 param flow_node_restr{flow_nodes, net_nodes}, binary; #算子部署位置限制
 param net_incidence{net_nodes, net_edges}, integer; #网络边的关联矩阵
 param net_path_incidence{net_nodes, net_paths}, integer; #网络链路的关联矩阵

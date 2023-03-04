@@ -8,7 +8,7 @@ param flow_incidence{flow_nodes, flow_edges}, integer; #流式计算图的关联
 param mi{flow_nodes}, >0; #算子平均每条数据所需算力
 param flow{flow_edges}, >0; #流式计算边流量
 param flow_node_is_sink{flow_nodes}, binary;
-# param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
+param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
 param in_flow_edge{flow_nodes, flow_edges}, binary; #算子的入边
 param flow_edge_s{flow_edges}, symbolic in flow_nodes, >0; #流式计算边起点
 ## 实际网络相关
@@ -72,8 +72,8 @@ subject to
     ## 特定算子部署到特定节点集的限制
     pos_restr{i in flow_nodes, j in net_nodes}: f[i,j] * flow_node_restr[i,j] =f[i,j];
     ## 计算节点插槽数量限制
-    slot_capacity{i in net_nodes}: sum{j in flow_nodes} f[i,j] <=slot[i];
-    ## 一个算子之恩那个部署到一个计算节点
+    slot_capacity{i in net_nodes}: sum{j in flow_nodes} f[i,j] <= slot[i];
+    ## 一个算子只能部署到一个计算节点
     1_operator_to_1_node{i in flow_nodes}: sum{j in net_nodes} f[i,j] =1;
     ## 算子映射f与边映射的关系
     f_to_edgemap{i in net_nodes, j in flow_edges} 
@@ -94,7 +94,7 @@ subject to
             cores[i]
         );
     compute_power_ratio_{i in net_nodes}:
-        compute_power_ratio[i] = net_node_cores_occupied_num[i] / (net_node_cores_occupied_num[i] * mips[i]);
+        compute_power_ratio[i] = net_node_cores_occupied_num[i] / (cores[i] * mips[i]);
     compute_power_ratio_f_{i in flow_nodes}:
         compute_power_ratio_f[i] = sum{j in net_nodes} f[i,j] * compute_power_ratio[j];
     comp_lat_{i in flow_nodes}:
@@ -102,7 +102,7 @@ subject to
     flow_edge_intr_lat_{i in flow_edges}:
         flow_edge_intr_lat[i] = sum{j in net_edges} net_edge_in_flow_edge[j,i] * net_edge_intr_lat[j];
     tran_lat_lowerbound{i in flow_edges}:
-        tran_lat[i] = sum{j in net_edges} tuple[i] * net_edge_in_flow_edge[j,i] / bandwidth[j];
+        tran_lat[i] = sum{j in net_edges} tuple_size[i] * net_edge_in_flow_edge[j,i] / bandwidth[j];
     lat_operator_{i in flow_nodes}:
         lat_operator[i] = comp_lat[i] + 
             (sum{j in flow_edges} in_flow_edge[i,j] * flow[j] * (lat_operator[flow_edge_s[j]] + tran_lat[j] + flow_edge_intr_lat[j] )) /

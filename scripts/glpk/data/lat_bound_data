@@ -1036,6 +1036,4 @@ param net_node_in_cloud :=
 	5 0
 	6 0
 	7 0;
-param flow_min := 1286860.0625;
-param lat_min := 25.239682;
 end;

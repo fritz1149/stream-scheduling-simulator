@@ -61,7 +61,7 @@ var lat_operator{flow_nodes}, >=0;
 ### 延迟相关
 var lat, >=0;
 # 目标
-minimize obj: lat;
+maximize obj: lat;
 # 主要约束
 subject to 
     # 不允许边边通信、从云到边的通信

@@ -22,7 +22,7 @@ s.t. demand{j in J}: sum{i in I} x[i,j] >= b[j];
 /* satisfy demand at market j */
 solve;
 display x;
-
+for {i in 1..5} printf "i= %d\n", i ;
 data;
 set I := Seattle San-Diego;
 set J := New-York Chicago Topeka;

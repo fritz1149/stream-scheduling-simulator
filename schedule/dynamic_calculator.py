@@ -322,6 +322,8 @@ def obj(graph: typing.List[ExecutionGraph],
     net_edge_of_path = data["net_edge_of_path"]
     flow_edge_as_net_path = [-1 for _ in range(flow_edge_num)]
     net_edge_intr_lat = data["net_edge_intr_lat"]
+    bandwidth = data["bandwidth"]
+    tuple_size = data["tuple_size"]
     for edge in range(flow_edge_num):
         for path in range(net_path_num):
             if f[flow_endpoint[edge][0]] == path_endpoint[0] and f[flow_endpoint[edge][1]] == path_endpoint[1]:
@@ -333,6 +335,7 @@ def obj(graph: typing.List[ExecutionGraph],
         path = flow_edge_as_net_path[edge]
         for net_edge in net_edge_of_path[path]:
             intr_lat[edge] = intr_lat[edge] + net_edge_intr_lat[net_edge]
+            tran_lat[edge] = tran_lat[edge] + tuple_size[edge] / bandwidth[net_edge]
     
     flow_min = data["flow_min"]
     lat_min = data["lat_min"]

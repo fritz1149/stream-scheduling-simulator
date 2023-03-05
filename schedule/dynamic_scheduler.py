@@ -25,19 +25,20 @@ class DynamicScheduler(Scheduler):
         self, graph_list: typing.List[ExecutionGraph]
     ) -> typing.List[SchedulingResult]:
         # vertices是算子列表，nodes是网络节点列表
-        ga(graph_list, self.scenario)
+        data = dict()
+        ga(graph_list, self.scenario, data)
         return None
 
 # 遗传算法
 def ga(graph_list: typing.List[ExecutionGraph],
-    scenario: Scenario
+    scenario: Scenario,
+    data: dict
     ):
-    data = get_lower_bound(graph_list, scenario)
-    lb = data["lb"]
+    lb = get_lower_bound(graph_list, scenario, data)
     n_ops = 0
     for graph in graph_list:
         n_ops += len(graph.g.nodes)
-    n_net_nodes = len(scenario.topo.g.nodes)
+    net_node_num = data["net_node_num"]
     # 约束
     flow_node_restr = data["flow_node_restr"] 
     def post_restr(x: typing.List):
@@ -51,31 +52,33 @@ def ga(graph_list: typing.List[ExecutionGraph],
         for pos in x:
             ret = ret & mips_positive[pos]
         return ret
-    
-    constraint_eq =  [
-        post_restr, mips_positive, 
-    ]
-    constraint_ueq = [
-        
+    flow_endpoint = data["flow_endpoint"]
+    edge_of = data["net_node_edge_index"]
+    def no_edge_to_edge(x: typing.List):
+        ret = 1
+        for u, v in flow_endpoint:
+            ret = ret & (edge_of[u] == edge_of[v] or edge_of[v] == -1)
+        return ret
+    slot = data["slot"]
+    def slot_capacity(x: typing.List):
+        ret = 1
+        occupied = [0 for _ in range(net_node_num)]
+        for pos in x:
+            occupied[pos] = occupied[pos] + 1
+        for i in range(net_node_num):
+            ret = ret & (occupied[i] <= slot[i])
+        return ret
+    eq =  [
+        no_edge_to_edge, post_restr, slot_capacity, mips_positive,
     ]
     # 超参数直接在下面改吧
-    ga = GA(func=partial(gap, graph_list, scenario, lb),
+    ga = GA(func=partial(gap, graph_list, scenario, lb, data),
             n_dim=n_ops, size_pop=50, max_iter=800, prob_mut=0.001, 
-            lb=[0 for _ in range(n_ops)], ub=[n_net_nodes - 1 for _ in range(n_ops)], precision=[1 for _ in range(n_ops)])
+            lb=[0 for _ in range(n_ops)], ub=[net_node_num - 1 for _ in range(n_ops)], precision=[1 for _ in range(n_ops)],
+            constraint_eq=eq)
     map_list = ga.run()
-
     
-# 计算特定部署方案的目标值
-def f(graph: ExecutionGraph, 
-    scenario: Scenario,
-    map_list: typing.List[int]
-    ) -> float:
-    return 0.0
-
-def gap(graph: ExecutionGraph, 
-    scenario: Scenario,
-    lb: float,
-    map_list: typing.List[int],
-    ) -> float:
-    x = f(graph, scenario, map_list)
-    return (x - lb) / lb
+def branch_and_bound(graph_list: typing.List[ExecutionGraph],
+    scenario: Scenario
+    ):
+    a = 1

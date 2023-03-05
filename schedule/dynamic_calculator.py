@@ -70,6 +70,7 @@ def get_flow_max(graph_list: typing.List[ExecutionGraph]) -> float:
                         endpoint[edge][0] = node
                     else:
                         endpoint[edge][1] = node
+                        break
         flow = [e[2] for e in graph.g.edges.data("flow")]
         nodes = graph.g.nodes.data("type")
         sources = [i for i, node in enumerate(nodes) if node[1] == "source"]
@@ -120,7 +121,7 @@ def get_lat_max(graph_list: typing.List[ExecutionGraph],
     return float(lat)
     
 def get_lower_bound(graph_list: typing.List[ExecutionGraph], 
-    scenario: Scenario):
+    scenario: Scenario, data:dict):
     # 流式计算图相关
     # graph_0 = graph_list[0]
     # print(graph_0.g.nodes.data("type"))
@@ -211,19 +212,20 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
                 net_edge_in_path[edge_index[edge]][path] = 1
     bandwidth = [e[2] for e in net.edges.data("bd")]
     net_edge_intr_lat = [e[2] for e in net.edges.data("delay")]
-    mips_reciprocal = [np.format_float_positional(e[1], trim='-') for e in net.nodes.data("mips")]
+    mips_reciprocal = [e[1] for e in net.nodes.data("mips")]
     mips_positive = []
     for i, mip in enumerate(mips_reciprocal):
-        mip = int(mip)
         if mip != 0:
             mips_reciprocal[i] = 1 / mip
             mips_positive.append(1)
         else:
             mips_positive.append(0)
+        mips_reciprocal[i] = np.format_float_positional(mips_reciprocal[i], trim='-')
     cores = [e[1] for e in net.nodes.data("cores")]
     slot = [e[1] for e in net.nodes.data("slots")]
     
     net_node_in_edge = [[0 for i in range(edge_domain_num)] for j in range(net_node_num)]
+    net_node_edge_index = [-1 for _ in range(net_node_num)]
     net_node_in_cloud = [0] * net_node_num
     for i, domain in enumerate(scenario.domains):
         if domain.type == "cloud":
@@ -232,6 +234,7 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
         else:
             for node in domain.topo.g.nodes:
                 net_node_in_edge[node_index[node]][i] = 1
+                net_node_edge_index[node_index[node]] = i
     
     param_list = [
         "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
@@ -239,7 +242,6 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
         "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
     ]
-    data = dict()
     items = locals()
     for param in param_list:
         data[param] = items[param]
@@ -262,7 +264,85 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
         )
     output = result.stdout.decode("ASCII")
     lb = output.split("\n")[-3].strip()
+    lb = float(lb)
     print("lower_bound: %s"%lb)
     
-    data["lb"] = float(lb)
-    return data
+    endpoint = [[-1, -1] for _ in range(flow_edge_num)]
+    for edge in range(flow_edge_num):
+        for node in range(flow_node_num):
+            if flow_incidence[node][edge] == 0:
+                continue
+            elif flow_incidence[node][edge] == -1:
+                endpoint[edge][0] = node
+            else:
+                endpoint[edge][1] = node
+    data["flow_endpoint"] = endpoint
+    data["net_node_edge_index"] = net_node_edge_index
+    
+    path_endpoint = [[-1, -1] for _ in range(net_path_num)]
+    for u in range(net_node_num):
+        for v in range(net_node_num):
+            path = u *net_node_num + v
+            path_endpoint[path][0] = u
+            path_endpoint[path][1] = v
+    net_edge_of_path = [[] for _ in range(net_path_num)]
+    for edge in range(net_edge_num):
+        for path in range(net_path_num):
+            if net_edge_in_path[edge][path] == 1:
+                net_edge_of_path[path].append[edge]
+    data["path_endpoint"] = path_endpoint
+    data["net_edge_of_path"] = net_edge_of_path
+    
+    return lb
+
+# 计算特定部署方案的目标值
+def obj(graph: typing.List[ExecutionGraph], 
+    scenario: Scenario,
+    f: typing.List[int],
+    data: dict
+    ) -> float:
+    net = scenario.topo.g
+    flow_node_num = data["flow_node_num"]
+    net_node_num = data["net_node_num"]
+    mi = data["mi"]
+    mips = [e[1] for e in net.nodes.data("mips")]
+    cores = data["cores"]
+    occupied = [0 for _ in range(net_node_num)]
+    for pos in f:
+        occupied[pos] = occupied[pos] + 1
+    for i, x in enumerate(occupied):
+        if x < cores[i]:
+            occupied[i] = cores[i]
+    comp_lat = [(mi[i] * occupied[f[i]]) / (cores[f[i]] * mips[f[i]]) for i in range(flow_node_num)]
+    
+    flow_edge_num = data["flow_edge_num"]
+    net_path_num = data["net_path_num"]
+    flow_endpoint = data["flow_endpoint"]
+    path_endpoint = data["path_endpoint"]
+    net_edge_of_path = data["net_edge_of_path"]
+    flow_edge_as_net_path = [-1 for _ in range(flow_edge_num)]
+    net_edge_intr_lat = data["net_edge_intr_lat"]
+    for edge in range(flow_edge_num):
+        for path in range(net_path_num):
+            if f[flow_endpoint[edge][0]] == path_endpoint[0] and f[flow_endpoint[edge][1]] == path_endpoint[1]:
+                flow_edge_as_net_path[edge] = path
+                break
+    intr_lat = [0 for _ in range(flow_edge_num)]
+    tran_lat = [0 for _ in range()]
+    for edge in flow_edge_num:
+        path = flow_edge_as_net_path[edge]
+        for net_edge in net_edge_of_path[path]:
+            intr_lat[edge] = intr_lat[edge] + net_edge_intr_lat[net_edge]
+    
+    flow_min = data["flow_min"]
+    lat_min = data["lat_min"]
+    return 0.0
+
+def gap(graph: typing.List[ExecutionGraph], 
+    scenario: Scenario,
+    lb: float,
+    data: dict,
+    f: typing.List[int],
+    ) -> float:
+    x = obj(graph, scenario, f, data)
+    return (x - lb) / lb

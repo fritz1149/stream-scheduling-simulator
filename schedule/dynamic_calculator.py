@@ -151,18 +151,19 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
             else:
                 out_flow_edge[i][j] = 1
     flow_edge_s = [e[0] for e in graph_merge.edges]
+    in_flow_sum = [0 for _ in range(flow_node_num)]
     in_flow_sum_reciprocal = [0 for _ in range(flow_node_num)]
     for node in range(flow_node_num):
         for edge in range(flow_edge_num):
-            in_flow_sum_reciprocal[node] += flow[edge] * in_flow_edge[node][edge]
+            in_flow_sum[node] += flow[edge] * in_flow_edge[node][edge]
     sink_in_flow_sum = 0
     # for node in range(flow_node_num):
     #     print("%d %d\n"%(flow_node_is_sink[node], in_flow_sum_reciprocal[node]))
     for node in range(flow_node_num):
         if flow_node_is_sink[node] == 1:
-            sink_in_flow_sum = sink_in_flow_sum + in_flow_sum_reciprocal[node]
-        if in_flow_sum_reciprocal[node] != 0:
-            in_flow_sum_reciprocal[node] = 1 / in_flow_sum_reciprocal[node]
+            sink_in_flow_sum = sink_in_flow_sum + in_flow_sum[node]
+        if in_flow_sum[node] != 0:
+            in_flow_sum_reciprocal[node] = 1 / in_flow_sum[node]
         in_flow_sum_reciprocal[node] = np.format_float_positional(in_flow_sum_reciprocal[node], trim='-')
     print("sink_in_flow_sum: {}".format(sink_in_flow_sum))
     # 实际网络相关
@@ -182,7 +183,7 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
     # u和v之间的path，下标为u*net_node_num + v
     net_path_num = net_node_num * net_node_num
     edge_domain_num = len(scenario.domains)
-    flow_node_restr = [[0 for i in range(net_node_num)] for j in range(flow_node_num)]
+    flow_node_restr = [[0 for _ in range(net_node_num)] for _ in range(flow_node_num)]
     for i, node in enumerate(graph_merge.nodes.data("domain_constraint")):
         if (h := node[1].get("host")) != None:
             flow_node_restr[i][node_index[h]] = 1
@@ -272,7 +273,7 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
         for node in range(flow_node_num):
             if flow_incidence[node][edge] == 0:
                 continue
-            elif flow_incidence[node][edge] == -1:
+            elif flow_incidence[node][edge] == 1:
                 endpoint[edge][0] = node
             else:
                 endpoint[edge][1] = node
@@ -289,31 +290,65 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
     for edge in range(net_edge_num):
         for path in range(net_path_num):
             if net_edge_in_path[edge][path] == 1:
-                net_edge_of_path[path].append[edge]
+                net_edge_of_path[path].append(edge)
     data["path_endpoint"] = path_endpoint
     data["net_edge_of_path"] = net_edge_of_path
+    
+    nodes = graph_merge.nodes.data("type")
+    sources = [i for i, node in enumerate(nodes) if node[1] == "source"]
+    sinks = [i for i, node in enumerate(nodes) if node[1] == "sink"]
+    op_in_edge = [[] for _ in range(flow_node_num)]
+    op_out_edge = [[] for _ in range(flow_node_num)]
+    op_indegree = [0 for _ in range(flow_node_num)]
+    for node in range(flow_node_num):
+        for edge in range(flow_edge_num):
+            if flow_incidence[node][edge] == 0:
+                continue
+            elif flow_incidence[node][edge] == -1:
+                op_in_edge[node].append(edge)
+                op_indegree[node] = op_indegree[node] + 1
+            else:
+                op_out_edge[node].append(edge)
+    mips = [e[1] for e in net.nodes.data("mips")]
+    data["sources"] = sources
+    data["sinks"] = sinks
+    data["op_in_edge"] = op_in_edge
+    data["op_out_edge"] = op_out_edge
+    data["op_indegree"] = op_indegree
+    data["in_flow_sum"] = in_flow_sum
+    data["sink_in_flow_sum"] = sink_in_flow_sum
+    data["lb"] = lb
+    data["mips"] = mips
     
     return lb
 
 # 计算特定部署方案的目标值
-def obj(graph: typing.List[ExecutionGraph], 
-    scenario: Scenario,
-    f: typing.List[int],
-    data: dict
+def obj(f: typing.List,
+    data: dict,
+    debug: bool = False 
     ) -> float:
-    net = scenario.topo.g
     flow_node_num = data["flow_node_num"]
     net_node_num = data["net_node_num"]
     mi = data["mi"]
-    mips = [e[1] for e in net.nodes.data("mips")]
+    mips = data["mips"]
     cores = data["cores"]
     occupied = [0 for _ in range(net_node_num)]
+    if type(f) != list:
+        f = f.astype(np.int32).tolist()
+    # for pos in f:
+    #     print(pos, mips[pos], end=",")
+    # print()
     for pos in f:
         occupied[pos] = occupied[pos] + 1
     for i, x in enumerate(occupied):
         if x < cores[i]:
             occupied[i] = cores[i]
-    comp_lat = [(mi[i] * occupied[f[i]]) / (cores[f[i]] * mips[f[i]]) for i in range(flow_node_num)]
+    comp_lat = [0 for _ in range(flow_node_num)]
+    for i in range(flow_node_num):
+        if mips[f[i]] == 0:
+            comp_lat[i] = math.inf
+        else:
+            comp_lat[i] = (mi[i] * occupied[f[i]]) / (cores[f[i]] * mips[f[i]])
     
     flow_edge_num = data["flow_edge_num"]
     net_path_num = data["net_path_num"]
@@ -330,22 +365,81 @@ def obj(graph: typing.List[ExecutionGraph],
                 flow_edge_as_net_path[edge] = path
                 break
     intr_lat = [0 for _ in range(flow_edge_num)]
-    tran_lat = [0 for _ in range()]
-    for edge in flow_edge_num:
+    tran_lat = [0 for _ in range(flow_edge_num)]
+    for edge in range(flow_edge_num):
         path = flow_edge_as_net_path[edge]
         for net_edge in net_edge_of_path[path]:
             intr_lat[edge] = intr_lat[edge] + net_edge_intr_lat[net_edge]
+            # 下面bandwidth处存在问题，此处为真实计算，应该用分配的值
             tran_lat[edge] = tran_lat[edge] + tuple_size[edge] / bandwidth[net_edge]
+    op_lat = [0 for _ in range(flow_node_num)]
+    sources = data["sources"]
+    flow = data["flow"]
+    flow_edge_s = data["flow_edge_s"]
+    op_in_edge = data["op_in_edge"]
+    op_out_edge = data["op_out_edge"]
+    if debug:
+        print("flow_endpoint: {}".format(flow_endpoint))
+        print("op_in_edge: {}".format(op_in_edge))
+        print("op_out_edge: {}".format(op_out_edge))
+    in_flow_sum = data["in_flow_sum"]
+    op_indegree = copy.deepcopy(data["op_indegree"])
+    queue = copy.deepcopy(sources)
+    head = 0
+    tail = len(sources)
+    while head < tail:
+        node = queue[head]
+        if debug:
+            print("node: {}".format(node))
+        if in_flow_sum[node] != 0:
+            for edge in op_in_edge[node]:
+                origin = flow_endpoint[edge][0]
+                op_lat[node] = op_lat[node] + flow[edge] * (op_lat[origin] + tran_lat[edge] + intr_lat[edge])
+            op_lat[node] = op_lat[node] / in_flow_sum[node] + comp_lat[node]
+        else:
+            op_lat[node] = comp_lat[node]
+        for edge in op_out_edge[node]:
+            dest = flow_endpoint[edge][1]
+            op_indegree[dest] = op_indegree[dest] - 1
+            if debug:
+                print("edge:{}, dest:{}, indegree:{}".format(edge, dest, op_indegree[dest]))
+            if op_indegree[dest] == 0:
+                queue.append(dest)
+                tail = tail + 1
+        head = head + 1
+    
+    lat = 0
+    sinks = data["sinks"]
+    sink_in_flow_sum = data["sink_in_flow_sum"]
+    for node in sinks:
+        if debug:
+            print("node: {}, op_lat: {}, in_flow_sum: {}".format(node, op_lat[node], in_flow_sum[node]))
+        lat = lat + op_lat[node] * in_flow_sum[node]
+    lat = lat / sink_in_flow_sum
+    
+    flow_ = 0
+    net_node_in_cloud = data["net_node_in_cloud"]
+    for edge in range(flow_edge_num):
+        u = flow_endpoint[edge][0]
+        v = flow_endpoint[edge][1]
+        if net_node_in_cloud[f[u]] != net_node_in_cloud[f[v]]:
+            flow_ = flow_ + flow[edge]
     
     flow_min = data["flow_min"]
     lat_min = data["lat_min"]
-    return 0.0
+    obj = lat / lat_min + flow_ / flow_min
+    if debug:
+        print("flow_min:", flow_min, "lat_min:", lat_min)
+        print("flow:", flow_, "lat:", lat)
+        print("obj:", obj)
+    return obj
 
-def gap(graph: typing.List[ExecutionGraph], 
-    scenario: Scenario,
-    lb: float,
+def gap(lb: float,
     data: dict,
-    f: typing.List[int],
+    f: typing.List,
     ) -> float:
-    x = obj(graph, scenario, f, data)
+    x = obj(f, data)
     return (x - lb) / lb
+
+if __name__ == "__main__":
+    print("hello")

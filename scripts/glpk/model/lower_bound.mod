@@ -132,7 +132,7 @@ subject to
     flow_node_in_cloud_{i in flow_nodes}:
         flow_node_in_cloud[i] = sum{j in net_nodes} f[i,j] * net_node_in_cloud[j];
     flow_edge_cross_{i in flow_edges}:
-        flow_edge_cross[i] = -1 * 
+        flow_edge_cross[i] = -1 *
             (sum{j in flow_nodes} flow_incidence[j,i] * flow_node_in_cloud[j]);
     flow_cross_:
         flow_cross = sum{i in flow_edges} flow_edge_cross[i] * flow[i];

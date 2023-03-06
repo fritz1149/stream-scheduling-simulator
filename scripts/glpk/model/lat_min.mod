@@ -123,6 +123,9 @@ subject to
               (sum{i in flow_nodes} flow_node_is_sink[i] * (sum{j in flow_edges} in_flow_edge[i,j] * flow[j]));
 solve;
 printf "%f\n", lat;
+# display comp_lat;
+# display tran_lat;
+# display flow_edge_intr_lat;
 # for {i in flow_nodes} {
 #     for {j in net_nodes} {
 #         printf "%d ", f[i,j];

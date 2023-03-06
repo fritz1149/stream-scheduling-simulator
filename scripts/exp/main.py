@@ -55,7 +55,7 @@ def run():
     sc.topo.clear_occupied()
     dynamic_scheduler = sch.DynamicScheduler(sc)
     dynamic_scheduler.schedule_multiple(graph_list)
-    return
+    # return
     
     sc.topo.clear_occupied()
     flow_scheduler = sch.FlowScheduler(sc)

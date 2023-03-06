@@ -11,6 +11,8 @@ from topo import Domain, Scenario, Node
 from .result import SchedulingResult, SchedulingResultStatus
 from .scheduler import RandomScheduler, Scheduler, SourcedGraph
 from sko.GA import GA
+from sko.tools import set_run_mode
+from pyscipopt import Model
 from functools import partial
 
 class DynamicScheduler(Scheduler):
@@ -27,7 +29,18 @@ class DynamicScheduler(Scheduler):
     ) -> typing.List[SchedulingResult]:
         # vertices是算子列表，nodes是网络节点列表
         data = dict()
-        ga(graph_list, self.scenario, data)
+        debug = True
+        if debug:
+            with open("main_data.json", "r") as f:
+                load_data = json.loads(f.read())
+            data.update(load_data)
+        else:
+            parse_data(graph_list, self.scenario, data, debug)
+            get_lower_bound(graph_list, self.scenario, data)
+            with open("main_data.json", "w") as f:
+                f.write(json.dumps(data))
+        lb = data["lb"]
+        # ga(graph_list, self.scenario, data)
         return None
 
 # 遗传算法
@@ -35,14 +48,7 @@ def ga(graph_list: typing.List[ExecutionGraph],
     scenario: Scenario,
     data: dict
     ):
-    # lb = get_lower_bound(graph_list, scenario, data)
-    # with open("main_data.json", "w") as f:
-    #     f.write(json.dumps(data))
-    # return 
-    lb = 0
-    with open("main_data.json", "r") as f:
-        data = json.loads(f.read())
-        lb = data["lb"]
+    lb = data["lb"]
         
     n_ops = data["flow_node_num"]
     net_node_num = data["net_node_num"]
@@ -81,21 +87,40 @@ def ga(graph_list: typing.List[ExecutionGraph],
         no_edge_to_edge, post_restr, slot_capacity, node_mips_positive,
     ]
     # 超参数直接在下面改吧
-    ga = GA(func=partial(gap, lb, data),
+    ga_func = partial(gap, lb, data)
+    # set_run_mode(ga_func, "cached")
+    ga = GA(func=ga_func,
             n_dim=n_ops, size_pop=50, max_iter=800, prob_mut=0.001, 
             lb=[0 for _ in range(n_ops)], ub=[net_node_num - 1 for _ in range(n_ops)], precision=[1 for _ in range(n_ops)],
             constraint_eq=eq)
     t1 = time.time()
-    map_list = ga.run()
+    res = ga.run()
     t2 = time.time()
     print('程序运行时间:%s毫秒' % ((t2 - t1)*1000))
     
-    map_list = map_list[0].astype(np.int32).tolist()
+    map_list = res[0]
     goal = obj(map_list, data, True)
-    print("f:", map_list)
-    print("obj: %f, lb: %f, gap: %f"%(goal, lb, (goal - lb) / lb))
+    # print("f:", map_list.astype(np.int32).tolist())
+    print("ga_obj:", res[1])
+    print("no_edge_to_edge:", no_edge_to_edge(map_list))
+    print("post_restr:", post_restr(map_list))
+    print("slot_capacity:", slot_capacity(map_list))
+    print("node_mips_positive:", node_mips_positive(map_list))
+    print("\nobj: %f, lb: %f, gap: %f"%(goal, lb, (goal - lb) / lb))
     
-def branch_and_bound(graph_list: typing.List[ExecutionGraph],
-    scenario: Scenario
+def bnb(graph_list: typing.List[ExecutionGraph],
+    scenario: Scenario,
+    data: dict
     ):
-    a = 1
+    model = Model("schedule-main")  # model name is optional
+    flow_node_num = model.addVar("flow_node_num")
+    x = model.addVar("x")
+    y = model.addVar("y", vtype="INTEGER")
+    z = model.addVar("z")
+    model.setObjective(z)
+    model.addCons(2*x - y*y >= 0)
+    model.addCons(x*y == z)
+    model.optimize()
+    sol = model.getBestSol()
+
+    print("x: {}, y: {}, z:{}".format(sol[x], sol[y], sol[z]))

@@ -4,10 +4,11 @@ import math
 import copy
 import numpy as np
 import subprocess
+import json
 from graph import ExecutionGraph
 from topo import Scenario
 
-def gen_data_file(f: typing.TextIO, data: typing.Dict):
+def gen_data_file(f: typing.TextIO, data: typing.Dict, param_list: typing.List):
     f.write("data;\n")
     def write_variable(name: str, data):
         f.write("param %s := %s;\n"%(name, str(data)))
@@ -27,7 +28,8 @@ def gen_data_file(f: typing.TextIO, data: typing.Dict):
             for x in l:
                 f.write("%s "%str(x))
         f.write(";\n")
-    for name, content in data.items():
+    for name in param_list:
+        content = data.get(name)
         if type(content) != list:
             write_variable(name, content)
         elif type(content[0]) != list:
@@ -36,97 +38,8 @@ def gen_data_file(f: typing.TextIO, data: typing.Dict):
             write_matrix(name, content)
     f.write("end;\n")
 
-def get_flow_min(graph_list: typing.List[ExecutionGraph]) -> float:
-    # 求所有流式计算边最小割的和
-    flow_min = 0
-    for graph in graph_list:
-        nodes = graph.g.nodes.data("type")
-        sources = [node[0] for node in nodes if node[1] == "source"]
-        sinks = [node[0] for node in nodes if node[1] == "sink"]
-        super_source = "super_source"
-        super_sink = "super_sink"
-        for source in sources:
-            graph.g.add_edge(super_source, source, flow = math.inf)
-        for sink in sinks:
-            graph.g.add_edge(sink, super_sink, flow = math.inf)
-        flow_min = flow_min + nx.minimum_cut_value(flowG=graph.g, _s=super_source, _t=super_sink, capacity="flow")
-        graph.g.remove_node(super_source)
-        graph.g.remove_node(super_sink)
-    print("flow_min %f"%flow_min)
-    return flow_min
-
-def get_flow_max(graph_list: typing.List[ExecutionGraph]) -> float:
-    flow_max = 0
-    for graph in graph_list:
-        # print(graph.g.edges)
-        node_num = len(graph.g.nodes)
-        edge_num = len(graph.g.edges)
-        incidence = nx.incidence_matrix(G=graph.g).toarray().astype(np.int32).tolist()
-        endpoint = [[-1, -1] for _ in range(edge_num)]
-        for edge in range(edge_num):
-            for node in range(node_num):
-                if incidence[node][edge] == 1:
-                    if endpoint[edge][0] == -1:
-                        endpoint[edge][0] = node
-                    else:
-                        endpoint[edge][1] = node
-                        break
-        flow = [e[2] for e in graph.g.edges.data("flow")]
-        nodes = graph.g.nodes.data("type")
-        sources = [i for i, node in enumerate(nodes) if node[1] == "source"]
-        sinks = [i for i, node in enumerate(nodes) if node[1] == "sink"]
-        source_num = len(sources)
-        sink_num = len(sinks)
-        param_list = [
-            "node_num", "edge_num", "endpoint", "flow", "source_num", "sink_num",
-            "sources", "sinks"
-        ]
-        data = dict()
-        items = locals()
-        for param in param_list:
-            data[param] = items[param]
-        with open("../glpk/data/flow_max_data", "w") as f:
-            gen_data_file(f, data)
-        result = subprocess.run(
-            ["glpsol", "--model", "../glpk/model/max_cut.mod", "--data", "../glpk/data/flow_max_data", "--tmlim", "30"],
-            capture_output=True
-        )
-        output = result.stdout.decode("ASCII")
-        # print(output)
-        cut = output.split("\n")[-3].strip()
-        flow_max = flow_max + float(cut)
-    print("flow_max %f"%flow_max)
-    return flow_max
-    
-def get_lat_min(graph_list: typing.List[ExecutionGraph], 
-    scenario: Scenario) -> float:
-    result = subprocess.run(
-            ["glpsol", "--model", "../glpk/model/lat_min.mod", "--data", "../glpk/data/lat_bound_data", "--tmlim", "30"],
-            capture_output=True
-        )
-    output = result.stdout.decode("ASCII")
-    lat = output.split("\n")[-3].strip()
-    print("lat_min %s"%lat)
-    return float(lat)
-    
-def get_lat_max(graph_list: typing.List[ExecutionGraph], 
-    scenario: Scenario) -> float:
-    result = subprocess.run(
-            ["glpsol", "--model", "../glpk/model/lat_max.mod", "--data", "../glpk/data/lat_bound_data", "--tmlim", "30"],
-            capture_output=True
-        )
-    output = result.stdout.decode("ASCII")
-    lat = output.split("\n")[-3].strip()
-    print("lat_max %s"%lat)
-    return float(lat)
-    
-def get_lower_bound(graph_list: typing.List[ExecutionGraph], 
+def parse_data(graph_list: typing.List[ExecutionGraph], 
     scenario: Scenario, data:dict):
-    # 流式计算图相关
-    # graph_0 = graph_list[0]
-    # print(graph_0.g.nodes.data("type"))
-    # print(graph_0.g.edges)
-    # print(nx.incidence_matrix(G=graph_0.g, oriented=True).toarray().astype(np.int32).tolist())
     graph_merge = nx.DiGraph()
     for graph in graph_list:
         graph_merge = nx.disjoint_union(graph_merge, graph.g)
@@ -237,48 +150,15 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
                 net_node_in_edge[node_index[node]][i] = 1
                 net_node_edge_index[node_index[node]] = i
     
-    param_list = [
-        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
-        "in_flow_edge", "out_flow_edge", "in_flow_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
-        "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
-        "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
-    ]
-    items = locals()
-    for param in param_list:
-        data[param] = items[param]
-    with open("../glpk/data/lat_bound_data", "w") as f:
-        gen_data_file(f, data)
-        
-    flow_min = get_flow_min(graph_list)
-    # flow_max = get_flow_max(graph_list)
-    lat_min = get_lat_min(graph_list, scenario)
-    # lat_max = get_lat_max(graph_list, scenario)
-    
-    data["flow_min"] = flow_min
-    data["lat_min"] = lat_min
-    with open("../glpk/data/lower_bound_data", "w") as f:
-        gen_data_file(f, data)
-        
-    result = subprocess.run(
-            ["glpsol", "--model", "../glpk/model/lower_bound.mod", "--data", "../glpk/data/lower_bound_data", "--tmlim", "30"],
-            capture_output=True
-        )
-    output = result.stdout.decode("ASCII")
-    lb = output.split("\n")[-3].strip()
-    lb = float(lb)
-    print("lower_bound: %s"%lb)
-    
-    endpoint = [[-1, -1] for _ in range(flow_edge_num)]
+    flow_endpoint = [[-1, -1] for _ in range(flow_edge_num)]
     for edge in range(flow_edge_num):
         for node in range(flow_node_num):
             if flow_incidence[node][edge] == 0:
                 continue
             elif flow_incidence[node][edge] == 1:
-                endpoint[edge][0] = node
+                flow_endpoint[edge][0] = node
             else:
-                endpoint[edge][1] = node
-    data["flow_endpoint"] = endpoint
-    data["net_node_edge_index"] = net_node_edge_index
+                flow_endpoint[edge][1] = node       
     
     path_endpoint = [[-1, -1] for _ in range(net_path_num)]
     for u in range(net_node_num):
@@ -290,9 +170,7 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
     for edge in range(net_edge_num):
         for path in range(net_path_num):
             if net_edge_in_path[edge][path] == 1:
-                net_edge_of_path[path].append(edge)
-    data["path_endpoint"] = path_endpoint
-    data["net_edge_of_path"] = net_edge_of_path
+                net_edge_of_path[path].append(edge)    
     
     nodes = graph_merge.nodes.data("type")
     sources = [i for i, node in enumerate(nodes) if node[1] == "source"]
@@ -310,15 +188,137 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
             else:
                 op_out_edge[node].append(edge)
     mips = [e[1] for e in net.nodes.data("mips")]
-    data["sources"] = sources
-    data["sinks"] = sinks
-    data["op_in_edge"] = op_in_edge
-    data["op_out_edge"] = op_out_edge
-    data["op_indegree"] = op_indegree
-    data["in_flow_sum"] = in_flow_sum
-    data["sink_in_flow_sum"] = sink_in_flow_sum
+    
+    param_list = [
+        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
+        "in_flow_edge", "out_flow_edge", "in_flow_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
+        "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
+        "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
+        "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_flow_sum", "op_in_edge", "op_out_edge",
+        "in_flow_sum", "op_indegree"
+    ]
+    items = locals()
+    for name in param_list:
+        data[name] = items[name]
+
+def get_flow_min(graph_list: typing.List[ExecutionGraph]) -> float:
+    # 求所有流式计算边最小割的和
+    flow_min = 0
+    for graph in graph_list:
+        nodes = graph.g.nodes.data("type")
+        sources = [node[0] for node in nodes if node[1] == "source"]
+        sinks = [node[0] for node in nodes if node[1] == "sink"]
+        super_source = "super_source"
+        super_sink = "super_sink"
+        for source in sources:
+            graph.g.add_edge(super_source, source, flow = math.inf)
+        for sink in sinks:
+            graph.g.add_edge(sink, super_sink, flow = math.inf)
+        flow_min = flow_min + nx.minimum_cut_value(flowG=graph.g, _s=super_source, _t=super_sink, capacity="flow")
+        graph.g.remove_node(super_source)
+        graph.g.remove_node(super_sink)
+    print("flow_min %f"%flow_min)
+    return flow_min
+
+def get_flow_max(graph_list: typing.List[ExecutionGraph]) -> float:
+    flow_max = 0
+    for graph in graph_list:
+        # print(graph.g.edges)
+        node_num = len(graph.g.nodes)
+        edge_num = len(graph.g.edges)
+        incidence = nx.incidence_matrix(G=graph.g).toarray().astype(np.int32).tolist()
+        endpoint = [[-1, -1] for _ in range(edge_num)]
+        for edge in range(edge_num):
+            for node in range(node_num):
+                if incidence[node][edge] == 1:
+                    if endpoint[edge][0] == -1:
+                        endpoint[edge][0] = node
+                    else:
+                        endpoint[edge][1] = node
+                        break
+        flow = [e[2] for e in graph.g.edges.data("flow")]
+        nodes = graph.g.nodes.data("type")
+        sources = [i for i, node in enumerate(nodes) if node[1] == "source"]
+        sinks = [i for i, node in enumerate(nodes) if node[1] == "sink"]
+        source_num = len(sources)
+        sink_num = len(sinks)
+        param_list = [
+            "node_num", "edge_num", "endpoint", "flow", "source_num", "sink_num",
+            "sources", "sinks"
+        ]
+        data = dict()
+        items = locals()
+        for param in param_list:
+            data[param] = items[param]
+        with open("../glpk/data/flow_max_data", "w") as f:
+            gen_data_file(f, data)
+        result = subprocess.run(
+            ["glpsol", "--model", "../glpk/model/max_cut.mod", "--data", "../glpk/data/flow_max_data", "--tmlim", "30"],
+            capture_output=True
+        )
+        output = result.stdout.decode("ASCII")
+        # print(output)
+        cut = output.split("\n")[-3].strip()
+        flow_max = flow_max + float(cut)
+    print("flow_max %f"%flow_max)
+    return flow_max
+    
+def get_lat_min() -> float:
+    result = subprocess.run(
+            ["glpsol", "--model", "../glpk/model/lat_min.mod", "--data", "../glpk/data/lat_bound_data", "--tmlim", "30"],
+            capture_output=True
+        )
+    output = result.stdout.decode("ASCII")
+    lat = output.split("\n")[-3].strip()
+    print("lat_min %s"%lat)
+    return float(lat)
+    
+def get_lat_max() -> float:
+    result = subprocess.run(
+            ["glpsol", "--model", "../glpk/model/lat_max.mod", "--data", "../glpk/data/lat_bound_data", "--tmlim", "30"],
+            capture_output=True
+        )
+    output = result.stdout.decode("ASCII")
+    lat = output.split("\n")[-3].strip()
+    print("lat_max %s"%lat)
+    return float(lat)
+    
+def get_lower_bound(graph_list: typing.List[ExecutionGraph], 
+    scenario: Scenario, data:dict):
+    # 流式计算图相关
+    # graph_0 = graph_list[0]
+    # print(graph_0.g.nodes.data("type"))
+    # print(graph_0.g.edges)
+    # print(nx.incidence_matrix(G=graph_0.g, oriented=True).toarray().astype(np.int32).tolist())
+    
+    param_list = [
+        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
+        "in_flow_edge", "out_flow_edge", "in_flow_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
+        "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
+        "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
+    ]
+    with open("../glpk/data/lat_bound_data", "w") as f:
+        gen_data_file(f, data, param_list)
+
+    flow_min = get_flow_min(graph_list)
+    # flow_max = get_flow_max(graph_list)
+    lat_min = get_lat_min()
+    # lat_max = get_lat_max(graph_list, scenario) 
+    data["flow_min"] = flow_min
+    data["lat_min"] = lat_min
+
+    param_list.extend(["flow_min", "lat_min"])
+    with open("../glpk/data/lower_bound_data", "w") as f:
+        gen_data_file(f, data, param_list)
+    result = subprocess.run(
+            ["glpsol", "--model", "../glpk/model/lower_bound.mod", "--data", "../glpk/data/lower_bound_data", "--tmlim", "30"],
+            capture_output=True
+        )
+    output = result.stdout.decode("ASCII")
+    lb = output.split("\n")[-3].strip()
+    lb = float(lb)
+    print("lower_bound: %s"%lb)
     data["lb"] = lb
-    data["mips"] = mips
     
     return lb
 
@@ -344,9 +344,10 @@ def obj(f: typing.List,
         if x < cores[i]:
             occupied[i] = cores[i]
     comp_lat = [0 for _ in range(flow_node_num)]
+    penalty_lat = 100000
     for i in range(flow_node_num):
         if mips[f[i]] == 0:
-            comp_lat[i] = math.inf
+            comp_lat[i] = penalty_lat
         else:
             comp_lat[i] = (mi[i] * occupied[f[i]]) / (cores[f[i]] * mips[f[i]])
     
@@ -361,7 +362,7 @@ def obj(f: typing.List,
     tuple_size = data["tuple_size"]
     for edge in range(flow_edge_num):
         for path in range(net_path_num):
-            if f[flow_endpoint[edge][0]] == path_endpoint[0] and f[flow_endpoint[edge][1]] == path_endpoint[1]:
+            if f[flow_endpoint[edge][0]] == path_endpoint[path][0] and f[flow_endpoint[edge][1]] == path_endpoint[path][1]:
                 flow_edge_as_net_path[edge] = path
                 break
     intr_lat = [0 for _ in range(flow_edge_num)]
@@ -378,10 +379,10 @@ def obj(f: typing.List,
     flow_edge_s = data["flow_edge_s"]
     op_in_edge = data["op_in_edge"]
     op_out_edge = data["op_out_edge"]
-    if debug:
-        print("flow_endpoint: {}".format(flow_endpoint))
-        print("op_in_edge: {}".format(op_in_edge))
-        print("op_out_edge: {}".format(op_out_edge))
+    # if debug:
+    #     print("flow_endpoint: {}".format(flow_endpoint))
+    #     print("op_in_edge: {}".format(op_in_edge))
+    #     print("op_out_edge: {}".format(op_out_edge))
     in_flow_sum = data["in_flow_sum"]
     op_indegree = copy.deepcopy(data["op_indegree"])
     queue = copy.deepcopy(sources)
@@ -389,8 +390,6 @@ def obj(f: typing.List,
     tail = len(sources)
     while head < tail:
         node = queue[head]
-        if debug:
-            print("node: {}".format(node))
         if in_flow_sum[node] != 0:
             for edge in op_in_edge[node]:
                 origin = flow_endpoint[edge][0]
@@ -398,11 +397,13 @@ def obj(f: typing.List,
             op_lat[node] = op_lat[node] / in_flow_sum[node] + comp_lat[node]
         else:
             op_lat[node] = comp_lat[node]
+        # if debug:
+        #     print("node: {}, opt_lat: {}".format(node, op_lat[node]))
         for edge in op_out_edge[node]:
             dest = flow_endpoint[edge][1]
             op_indegree[dest] = op_indegree[dest] - 1
-            if debug:
-                print("edge:{}, dest:{}, indegree:{}".format(edge, dest, op_indegree[dest]))
+            # if debug:
+            #     print("edge:{}, dest:{}, indegree:{}".format(edge, dest, op_indegree[dest]))
             if op_indegree[dest] == 0:
                 queue.append(dest)
                 tail = tail + 1
@@ -412,8 +413,8 @@ def obj(f: typing.List,
     sinks = data["sinks"]
     sink_in_flow_sum = data["sink_in_flow_sum"]
     for node in sinks:
-        if debug:
-            print("node: {}, op_lat: {}, in_flow_sum: {}".format(node, op_lat[node], in_flow_sum[node]))
+        # if debug:
+        #     print("node: {}, op_lat: {}, in_flow_sum: {}".format(node, op_lat[node], in_flow_sum[node]))
         lat = lat + op_lat[node] * in_flow_sum[node]
     lat = lat / sink_in_flow_sum
     
@@ -429,6 +430,9 @@ def obj(f: typing.List,
     lat_min = data["lat_min"]
     obj = lat / lat_min + flow_ / flow_min
     if debug:
+    #     print("comp_lat:", comp_lat)
+    #     print("tran_lat:", tran_lat)
+    #     print("intr_lat:", intr_lat)
         print("flow_min:", flow_min, "lat_min:", lat_min)
         print("flow:", flow_, "lat:", lat)
         print("obj:", obj)

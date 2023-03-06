@@ -151,13 +151,13 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     for flow_edge in range(flow_edge_num):
         for net_path in range(net_path_num):
             model.addCons(quicksum(
-                out_flow_edge[flow_node][flow_edge] * f[flow_node, net_node] * net_path_origin[net_node][net_path]
-                for flow_node, net_node in product(range(flow_node_num, net_node_num))
+                out_flow_edge[flow_node][flow_edge] * net_path_origin[net_node][net_path] * f[flow_node, net_node]
+                for flow_node, net_node in product(range(flow_node_num), range(net_node_num))
             ) == flow_edge_as_net_path_origin[flow_edge, net_path],
                           name="flow_edge_as_net_path_origin(%d,%d)"%(flow_edge,net_path))
             model.addCons(quicksum(
-                in_flow_edge[flow_node][flow_edge] * f[flow_node, net_node] * net_path_dest[net_node][net_path]
-                for flow_node, net_node in product(range(flow_node_num, net_node_num))
+                in_flow_edge[flow_node][flow_edge] * net_path_dest[net_node][net_path] * f[flow_node, net_node]
+                for flow_node, net_node in product(range(flow_node_num), range(net_node_num))
             ) == flow_edge_as_net_path_dest[flow_edge, net_path],
                           name="flow_edge_as_net_path_dest(%d,%d)"%(flow_edge,net_path))
             model.addConsAnd([flow_edge_as_net_path_origin[flow_edge, net_path],
@@ -266,11 +266,15 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     # 目标
     flow_min = data["flow_min"]
     lat_min = data["lat_min"]
-    model.setObjective(flow_cross/flow_min + lat/lat_min, sense="maximize")
+    model.setObjective(flow_cross/flow_min + lat/lat_min, sense="minimize")
+    model.hideOutput()
     model.optimize() 
     sol = model.getBestSol()
-    print("f:")
-    for flow_node in range(flow_node_num):
-        for net_node in range(net_node_num):
-            print(int(sol[f[flow_node, net_node]]), end="")
-        print()
+    
+    flow_cross = sol[flow_cross]
+    lat = sol[lat]
+    print()
+    print("flow: {}, lat: {}".format(flow_cross, lat))
+    print("flow_min: {}, lat_min: {}".format(flow_min, lat_min))
+    print("{}, {}, {}".format(flow_cross/flow_min, lat/lat_min, 
+                              flow_cross/flow_min + lat/lat_min))

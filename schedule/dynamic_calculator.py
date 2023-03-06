@@ -195,7 +195,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
         "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
         "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_flow_sum", "op_in_edge", "op_out_edge",
-        "in_flow_sum", "op_indegree"
+        "in_flow_sum", "op_indegree", "mips"
     ]
     items = locals()
     for name in param_list:

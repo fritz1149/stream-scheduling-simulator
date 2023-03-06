@@ -46,7 +46,7 @@ var flow_edge_as_net_path{flow_edges, net_paths}, binary;
 # var flow_edge_as_net_path{flow_edges}, integer, >=0, <=net_paths-1;
 var flow_edge_as_net_path_origin{flow_edges, net_paths}, binary;
 var flow_edge_as_net_path_dest{flow_edges, net_paths}, binary;
-var net_edge_in_flow_edge{net_nodes, flow_edges}, binary;
+var net_edge_in_flow_edge{net_edges, flow_edges}, binary;
 ### 延迟相关
 #### 计算延迟
 var comp_lat{flow_nodes}, >=0;

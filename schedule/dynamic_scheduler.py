@@ -151,12 +151,12 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     for flow_edge in range(flow_edge_num):
         for net_path in range(net_path_num):
             model.addCons(quicksum(
-                out_flow_edge[flow_node, flow_edge] * f[flow_node, net_node] * net_path_origin[net_node, net_path]
+                out_flow_edge[flow_node][flow_edge] * f[flow_node, net_node] * net_path_origin[net_node][net_path]
                 for flow_node, net_node in product(range(flow_node_num, net_node_num))
             ) == flow_edge_as_net_path_origin[flow_edge, net_path],
                           name="flow_edge_as_net_path_origin(%d,%d)"%(flow_edge,net_path))
             model.addCons(quicksum(
-                in_flow_edge[flow_node, flow_edge] * f[flow_node, net_node] * net_path_dest[net_node, net_path]
+                in_flow_edge[flow_node][flow_edge] * f[flow_node, net_node] * net_path_dest[net_node][net_path]
                 for flow_node, net_node in product(range(flow_node_num, net_node_num))
             ) == flow_edge_as_net_path_dest[flow_edge, net_path],
                           name="flow_edge_as_net_path_dest(%d,%d)"%(flow_edge,net_path))
@@ -172,14 +172,13 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     comp_lat = {}
     op_lat = {}
     mi = data["mi"]
-    mips = data["mips"]
     mips_reciprocal = copy.deepcopy(data["mips_reciprocal"])
     for i in range(net_node_num):
         mips_reciprocal[i] = float(mips_reciprocal[i])
     for flow_node in range(flow_node_num):
         comp_lat[flow_node] = model.addVar(vtype="CONTINUOUS", name="comp_lat(%d)"%flow_node)
         op_lat[flow_node] = model.addVar(vtype="CONTINUOUS", name="op_lat(%d)"%flow_node)
-        model.addCons(quicksum(mi[flow_node] * f[flow_node, net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
+        model.addCons(mi[flow_node] * quicksum(f[flow_node, net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
                       == comp_lat[flow_node],
                       name="comp_lat(%d)"%flow_node)
     intr_lat = {}
@@ -193,7 +192,7 @@ def bnb(graph_list: typing.List[ExecutionGraph],
         model.addCons(quicksum(net_edge_in_flow_edge[net_edge, flow_edge] * net_edge_intr_lat[net_edge] for net_edge in range(net_edge_num))
                       == intr_lat[flow_edge],
                       name="intr_lat(%d)"%flow_edge)
-        model.addCons(quicksum(net_edge_in_flow_edge[net_edge, flow_edge] * tuple_size[flow_edge] / bandwidth[net_edge] for net_edge in range(net_edge_num))
+        model.addCons(tuple_size[flow_edge] * quicksum(net_edge_in_flow_edge[net_edge, flow_edge] / bandwidth[net_edge] for net_edge in range(net_edge_num))
                       == tran_lat[flow_edge],
                       name="tran_lat(%d)"%flow_edge)
     flow = data["flow"]
@@ -204,7 +203,7 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     flow_endpoint = data["flow_endpoint"]
     for flow_node in range(flow_node_num):
         model.addCons(comp_lat[flow_node] + quicksum(flow[flow_edge] * (tran_lat[flow_edge] + intr_lat[flow_edge] +
-                    quicksum(op_lat[edge_origin] for edge_origin, _ in flow_endpoint)) for flow_edge in op_in_edge[flow_node])
+                    op_lat[flow_endpoint[flow_edge][0]]) for flow_edge in op_in_edge[flow_node])
                     * in_flow_sum_reciprocal[flow_node] == op_lat[flow_node],
                     name="op_lat(%d)"%flow_node)
     lat = model.addVar(vtype="CONTINUOUS", name="lat")

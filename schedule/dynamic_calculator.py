@@ -136,6 +136,10 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             mips_positive.append(0)
         mips_reciprocal[i] = np.format_float_positional(mips_reciprocal[i], trim='-')
     cores = [e[1] for e in net.nodes.data("cores")]
+    cores_reciprocal = [0 for _ in range(net_node_num)]
+    for i, core in enumerate(cores):
+        if core != 0:
+            cores_reciprocal[i] = 1 / core
     slot = [e[1] for e in net.nodes.data("slots")]
     
     net_node_in_edge = [[0 for i in range(edge_domain_num)] for j in range(net_node_num)]
@@ -195,7 +199,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
         "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
         "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_flow_sum", "op_in_edge", "op_out_edge",
-        "in_flow_sum", "op_indegree", "mips"
+        "in_flow_sum", "op_indegree", "mips", "cores_reciprocal"
     ]
     items = locals()
     for name in param_list:

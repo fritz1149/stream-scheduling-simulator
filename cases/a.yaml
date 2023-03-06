@@ -1,88 +1,64 @@
 edges:
 - data:
-    flow: 589776.0
-    per_second: 12
-    unit_size: 49148.0
+    flow: 793500.0
+    per_second: 20
+    unit_size: 39675.0
   from: g0-v0
   to: g0-v1
 - data:
-    flow: 203992.5
-    per_second: 15
-    unit_size: 13599.5
+    flow: 207122.5
+    per_second: 13
+    unit_size: 15932.5
   from: g0-v0
   to: g0-v2
 - data:
-    flow: 205865.0
-    per_second: 20
-    unit_size: 10293.25
+    flow: 290349.0
+    per_second: 18
+    unit_size: 16130.5
   from: g0-v0
   to: g0-v3
 - data:
-    flow: 160508.0
+    flow: 71420.0
     per_second: 16
-    unit_size: 10031.75
+    unit_size: 4463.75
   from: g0-v0
-  to: g0-v4
+  to: g0-v5
 - data:
-    flow: 71964.75
-    per_second: 13
-    unit_size: 5535.75
+    flow: 33991.375
+    per_second: 11
+    unit_size: 3090.125
   from: g0-v1
   to: g0-v6
 - data:
-    flow: 24899.25
-    per_second: 12
-    unit_size: 2074.9375
-  from: g0-v1
+    flow: 49695.0
+    per_second: 20
+    unit_size: 2484.75
+  from: g0-v2
   to: g0-v7
 - data:
-    flow: 35223.75
-    per_second: 20
-    unit_size: 1761.1875
-  from: g0-v1
-  to: g0-v8
-- data:
-    flow: 107085.0
-    per_second: 11
-    unit_size: 9735.0
-  from: g0-v2
-  to: g0-v3
-- data:
-    flow: 35621.625
-    per_second: 13
-    unit_size: 2740.125
-  from: g0-v2
-  to: g0-v8
-- data:
-    flow: 101473.0
-    per_second: 17
-    unit_size: 5969.0
-  from: g0-v3
-  to: g0-v5
-- data:
-    flow: 29878.75
-    per_second: 11
-    unit_size: 2716.25
-  from: g0-v4
-  to: g0-v5
-- data:
-    flow: 39940.5
+    flow: 114621.0
     per_second: 12
-    unit_size: 3328.375
+    unit_size: 9551.75
+  from: g0-v3
+  to: g0-v4
+- data:
+    flow: 28922.25
+    per_second: 12
+    unit_size: 2410.1875
   from: g0-v4
   to: g0-v6
 - data:
-    flow: 28350.375
-    per_second: 19
-    unit_size: 1492.125
+    flow: 9642.1875
+    per_second: 15
+    unit_size: 642.8125
   from: g0-v7
-  to: g0-v9
+  to: g0-v8
 uuid: g0
 vertices:
   g0-v0:
     domain_constraint:
       host: rasp3
-    downstream_bd: 1160141.5
+    downstream_bd: 1362391.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -90,36 +66,36 @@ vertices:
     upstream_bd: 0
   g0-v1:
     domain_constraint: {}
-    downstream_bd: 132087.75
+    downstream_bd: 33991.375
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 589776.0
+    upstream_bd: 793500.0
   g0-v2:
     domain_constraint: {}
-    downstream_bd: 142706.625
+    downstream_bd: 49695.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 203992.5
+    upstream_bd: 207122.5
   g0-v3:
     domain_constraint: {}
-    downstream_bd: 101473.0
+    downstream_bd: 114621.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 312950.0
+    upstream_bd: 290349.0
   g0-v4:
     domain_constraint: {}
-    downstream_bd: 69819.25
+    downstream_bd: 28922.25
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 160508.0
+    upstream_bd: 114621.0
   g0-v5:
     domain_constraint:
       host: cloud1
@@ -128,7 +104,7 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 131351.75
+    upstream_bd: 71420.0
   g0-v6:
     domain_constraint:
       host: cloud1
@@ -137,15 +113,15 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 111905.25
+    upstream_bd: 62913.625
   g0-v7:
     domain_constraint: {}
-    downstream_bd: 28350.375
+    downstream_bd: 9642.1875
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 24899.25
+    upstream_bd: 49695.0
   g0-v8:
     domain_constraint:
       host: cloud1
@@ -154,96 +130,81 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 70845.375
-  g0-v9:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 28350.375
+    upstream_bd: 9642.1875
 ---
 edges:
 - data:
-    flow: 565614.0
-    per_second: 18
-    unit_size: 31423.0
+    flow: 381060.0
+    per_second: 15
+    unit_size: 25404.0
   from: g1-v0
   to: g1-v1
 - data:
-    flow: 311571.5
-    per_second: 19
-    unit_size: 16398.5
+    flow: 428886.0
+    per_second: 18
+    unit_size: 23827.0
   from: g1-v0
   to: g1-v2
 - data:
-    flow: 415511.0
-    per_second: 19
-    unit_size: 21869.0
+    flow: 145404.0
+    per_second: 14
+    unit_size: 10386.0
   from: g1-v0
   to: g1-v3
 - data:
-    flow: 435411.0
+    flow: 112452.75
     per_second: 18
-    unit_size: 24189.5
-  from: g1-v1
-  to: g1-v2
+    unit_size: 6247.375
+  from: g1-v0
+  to: g1-v4
 - data:
-    flow: 110075.0
-    per_second: 20
-    unit_size: 5503.75
+    flow: 212068.5
+    per_second: 19
+    unit_size: 11161.5
   from: g1-v1
+  to: g1-v3
+- data:
+    flow: 61650.0
+    per_second: 18
+    unit_size: 3425.0
+  from: g1-v2
   to: g1-v5
 - data:
-    flow: 33876.75
-    per_second: 12
-    unit_size: 2823.0625
-  from: g1-v2
-  to: g1-v8
-- data:
-    flow: 144823.0
-    per_second: 17
-    unit_size: 8519.0
+    flow: 99619.375
+    per_second: 19
+    unit_size: 5243.125
   from: g1-v3
   to: g1-v4
 - data:
-    flow: 66734.25
-    per_second: 11
-    unit_size: 6066.75
+    flow: 53145.625
+    per_second: 13
+    unit_size: 4088.125
   from: g1-v3
   to: g1-v5
 - data:
-    flow: 98880.0
-    per_second: 20
-    unit_size: 4944.0
+    flow: 31329.375
+    per_second: 15
+    unit_size: 2088.625
   from: g1-v4
   to: g1-v6
 - data:
-    flow: 26713.125
-    per_second: 10
-    unit_size: 2671.3125
-  from: g1-v4
-  to: g1-v8
+    flow: 51838.875
+    per_second: 18
+    unit_size: 2879.9375
+  from: g1-v5
+  to: g1-v6
 - data:
-    flow: 36270.5625
-    per_second: 17
-    unit_size: 2133.5625
+    flow: 15290.625
+    per_second: 12
+    unit_size: 1274.21875
   from: g1-v6
   to: g1-v7
-- data:
-    flow: 17883.0
-    per_second: 12
-    unit_size: 1490.25
-  from: g1-v7
-  to: g1-v9
 uuid: g1
 vertices:
   g1-v0:
     domain_constraint:
-      host: rasp2
-    downstream_bd: 1292696.5
+      host: rasp1
+    downstream_bd: 1067802.75
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -251,62 +212,53 @@ vertices:
     upstream_bd: 0
   g1-v1:
     domain_constraint: {}
-    downstream_bd: 545486.0
+    downstream_bd: 212068.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 565614.0
+    upstream_bd: 381060.0
   g1-v2:
     domain_constraint: {}
-    downstream_bd: 33876.75
+    downstream_bd: 61650.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 746982.5
+    upstream_bd: 428886.0
   g1-v3:
     domain_constraint: {}
-    downstream_bd: 211557.25
+    downstream_bd: 152765.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 415511.0
+    upstream_bd: 357472.5
   g1-v4:
     domain_constraint: {}
-    downstream_bd: 125593.125
+    downstream_bd: 31329.375
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 144823.0
+    upstream_bd: 212072.125
   g1-v5:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
+    domain_constraint: {}
+    downstream_bd: 51838.875
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: sink
-    upstream_bd: 176809.25
+    type: operator
+    upstream_bd: 114795.625
   g1-v6:
     domain_constraint: {}
-    downstream_bd: 36270.5625
+    downstream_bd: 15290.625
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 98880.0
+    upstream_bd: 83168.25
   g1-v7:
-    domain_constraint: {}
-    downstream_bd: 17883.0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 36270.5625
-  g1-v8:
     domain_constraint:
       host: cloud1
     downstream_bd: 0
@@ -314,96 +266,75 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 60589.875
-  g1-v9:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 17883.0
+    upstream_bd: 15290.625
 ---
 edges:
 - data:
-    flow: 468940.0
-    per_second: 20
-    unit_size: 23447.0
+    flow: 422670.0
+    per_second: 15
+    unit_size: 28178.0
   from: g2-v0
   to: g2-v1
 - data:
-    flow: 307485.0
-    per_second: 15
-    unit_size: 20499.0
+    flow: 55723.5
+    per_second: 14
+    unit_size: 3980.25
   from: g2-v0
-  to: g2-v3
+  to: g2-v6
 - data:
-    flow: 332422.5
+    flow: 268402.5
     per_second: 15
-    unit_size: 22161.5
+    unit_size: 17893.5
   from: g2-v1
   to: g2-v2
 - data:
-    flow: 178773.75
-    per_second: 15
-    unit_size: 11918.25
+    flow: 204582.0
+    per_second: 12
+    unit_size: 17048.5
   from: g2-v1
-  to: g2-v4
+  to: g2-v3
 - data:
-    flow: 60601.75
-    per_second: 11
-    unit_size: 5509.25
-  from: g2-v1
-  to: g2-v6
-- data:
-    flow: 67831.875
-    per_second: 15
-    unit_size: 4522.125
+    flow: 86604.375
+    per_second: 17
+    unit_size: 5094.375
   from: g2-v2
-  to: g2-v6
-- data:
-    flow: 19900.5625
-    per_second: 13
-    unit_size: 1530.8125
-  from: g2-v2
-  to: g2-v8
-- data:
-    flow: 39861.5
-    per_second: 14
-    unit_size: 2847.25
-  from: g2-v4
   to: g2-v5
 - data:
-    flow: 20090.8125
-    per_second: 18
-    unit_size: 1116.15625
-  from: g2-v4
-  to: g2-v9
+    flow: 114565.75
+    per_second: 13
+    unit_size: 8812.75
+  from: g2-v3
+  to: g2-v4
 - data:
-    flow: 40803.75
-    per_second: 15
-    unit_size: 2720.25
+    flow: 42584.5
+    per_second: 14
+    unit_size: 3041.75
+  from: g2-v4
+  to: g2-v7
+- data:
+    flow: 13240.0
+    per_second: 16
+    unit_size: 827.5
   from: g2-v5
   to: g2-v8
 - data:
-    flow: 25118.5625
-    per_second: 17
-    unit_size: 1477.5625
-  from: g2-v6
-  to: g2-v7
+    flow: 6252.1875
+    per_second: 10
+    unit_size: 625.21875
+  from: g2-v5
+  to: g2-v9
 - data:
-    flow: 17273.96875
-    per_second: 19
-    unit_size: 909.15625
+    flow: 7075.0625
+    per_second: 11
+    unit_size: 643.1875
   from: g2-v7
-  to: g2-v10
+  to: g2-v8
 uuid: g2
 vertices:
   g2-v0:
     domain_constraint:
       host: rasp2
-    downstream_bd: 776425.0
+    downstream_bd: 478393.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -411,30 +342,45 @@ vertices:
     upstream_bd: 0
   g2-v1:
     domain_constraint: {}
-    downstream_bd: 571798.0
+    downstream_bd: 472984.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 468940.0
-  g2-v10:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 17273.96875
+    upstream_bd: 422670.0
   g2-v2:
     domain_constraint: {}
-    downstream_bd: 87732.4375
+    downstream_bd: 86604.375
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 332422.5
+    upstream_bd: 268402.5
   g2-v3:
+    domain_constraint: {}
+    downstream_bd: 114565.75
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 204582.0
+  g2-v4:
+    domain_constraint: {}
+    downstream_bd: 42584.5
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 114565.75
+  g2-v5:
+    domain_constraint: {}
+    downstream_bd: 19492.1875
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 86604.375
+  g2-v6:
     domain_constraint:
       host: cloud1
     downstream_bd: 0
@@ -442,39 +388,15 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 307485.0
-  g2-v4:
-    domain_constraint: {}
-    downstream_bd: 59952.3125
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 178773.75
-  g2-v5:
-    domain_constraint: {}
-    downstream_bd: 40803.75
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 39861.5
-  g2-v6:
-    domain_constraint: {}
-    downstream_bd: 25118.5625
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 128433.625
+    upstream_bd: 55723.5
   g2-v7:
     domain_constraint: {}
-    downstream_bd: 17273.96875
+    downstream_bd: 7075.0625
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 25118.5625
+    upstream_bd: 42584.5
   g2-v8:
     domain_constraint:
       host: cloud1
@@ -483,7 +405,7 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 60704.3125
+    upstream_bd: 20315.0625
   g2-v9:
     domain_constraint:
       host: cloud1
@@ -492,75 +414,93 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 20090.8125
+    upstream_bd: 6252.1875
 ---
 edges:
 - data:
-    flow: 826386.0
+    flow: 579177.0
     per_second: 19
-    unit_size: 43494.0
+    unit_size: 30483.0
   from: g3-v0
   to: g3-v1
 - data:
-    flow: 544608.0
-    per_second: 12
-    unit_size: 45384.0
+    flow: 101465.0
+    per_second: 10
+    unit_size: 10146.5
   from: g3-v0
   to: g3-v2
 - data:
-    flow: 35147.75
-    per_second: 11
-    unit_size: 3195.25
+    flow: 142117.5
+    per_second: 14
+    unit_size: 10151.25
+  from: g3-v1
+  to: g3-v3
+- data:
+    flow: 39291.0
+    per_second: 12
+    unit_size: 3274.25
   from: g3-v1
   to: g3-v5
 - data:
-    flow: 35683.125
-    per_second: 15
-    unit_size: 2378.875
-  from: g3-v1
-  to: g3-v7
-- data:
-    flow: 299362.5
-    per_second: 15
-    unit_size: 19957.5
+    flow: 38809.875
+    per_second: 13
+    unit_size: 2985.375
   from: g3-v2
-  to: g3-v3
+  to: g3-v5
 - data:
-    flow: 37134.375
-    per_second: 15
-    unit_size: 2475.625
+    flow: 42419.25
+    per_second: 17
+    unit_size: 2495.25
   from: g3-v2
   to: g3-v7
 - data:
-    flow: 118993.0
-    per_second: 14
-    unit_size: 8499.5
+    flow: 63200.25
+    per_second: 18
+    unit_size: 3511.125
   from: g3-v3
   to: g3-v4
 - data:
-    flow: 66408.0
-    per_second: 16
-    unit_size: 4150.5
+    flow: 18939.375
+    per_second: 10
+    unit_size: 1893.9375
   from: g3-v3
+  to: g3-v7
+- data:
+    flow: 40143.25
+    per_second: 14
+    unit_size: 2867.375
+  from: g3-v5
   to: g3-v6
 - data:
-    flow: 60385.5
-    per_second: 12
-    unit_size: 5032.125
-  from: g3-v4
-  to: g3-v6
+    flow: 14080.5
+    per_second: 14
+    unit_size: 1005.75
+  from: g3-v5
+  to: g3-v9
 - data:
-    flow: 19723.59375
-    per_second: 15
-    unit_size: 1314.90625
+    flow: 14463.3125
+    per_second: 14
+    unit_size: 1033.09375
+  from: g3-v6
+  to: g3-v8
+- data:
+    flow: 15899.625
+    per_second: 14
+    unit_size: 1135.6875
+  from: g3-v6
+  to: g3-v9
+- data:
+    flow: 13808.78125
+    per_second: 11
+    unit_size: 1255.34375
   from: g3-v7
   to: g3-v8
 uuid: g3
 vertices:
   g3-v0:
     domain_constraint:
-      host: rasp3
-    downstream_bd: 1370994.0
+      host: rasp2
+    downstream_bd: 680642.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -568,62 +508,61 @@ vertices:
     upstream_bd: 0
   g3-v1:
     domain_constraint: {}
-    downstream_bd: 70830.875
+    downstream_bd: 181408.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 826386.0
+    upstream_bd: 579177.0
   g3-v2:
     domain_constraint: {}
-    downstream_bd: 336496.875
+    downstream_bd: 81229.125
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 544608.0
+    upstream_bd: 101465.0
   g3-v3:
     domain_constraint: {}
-    downstream_bd: 185401.0
+    downstream_bd: 82139.625
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 299362.5
+    upstream_bd: 142117.5
   g3-v4:
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: sink
+    upstream_bd: 63200.25
+  g3-v5:
     domain_constraint: {}
-    downstream_bd: 60385.5
+    downstream_bd: 54223.75
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 118993.0
-  g3-v5:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 35147.75
+    upstream_bd: 78100.875
   g3-v6:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
+    domain_constraint: {}
+    downstream_bd: 30362.9375
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: sink
-    upstream_bd: 126793.5
+    type: operator
+    upstream_bd: 40143.25
   g3-v7:
     domain_constraint: {}
-    downstream_bd: 19723.59375
+    downstream_bd: 13808.78125
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 72817.5
+    upstream_bd: 61358.625
   g3-v8:
     domain_constraint:
       host: cloud1
@@ -632,117 +571,108 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 19723.59375
+    upstream_bd: 28272.09375
+  g3-v9:
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: sink
+    upstream_bd: 29980.125
 ---
 edges:
 - data:
-    flow: 695170.0
-    per_second: 14
-    unit_size: 49655.0
+    flow: 438700.0
+    per_second: 10
+    unit_size: 43870.0
   from: g4-v0
   to: g4-v1
 - data:
-    flow: 669696.0
-    per_second: 16
-    unit_size: 41856.0
+    flow: 677180.0
+    per_second: 14
+    unit_size: 48370.0
   from: g4-v0
   to: g4-v2
 - data:
-    flow: 232665.0
-    per_second: 20
-    unit_size: 11633.25
+    flow: 62638.875
+    per_second: 13
+    unit_size: 4818.375
   from: g4-v0
-  to: g4-v5
+  to: g4-v6
 - data:
-    flow: 19812.5
-    per_second: 10
-    unit_size: 1981.25
-  from: g4-v0
-  to: g4-v9
-- data:
-    flow: 106915.0
-    per_second: 10
-    unit_size: 10691.5
+    flow: 207309.0
+    per_second: 19
+    unit_size: 10911.0
   from: g4-v1
   to: g4-v3
 - data:
-    flow: 250838.5
-    per_second: 11
-    unit_size: 22803.5
-  from: g4-v1
+    flow: 153140.0
+    per_second: 10
+    unit_size: 15314.0
+  from: g4-v2
+  to: g4-v3
+- data:
+    flow: 136031.25
+    per_second: 15
+    unit_size: 9068.75
+  from: g4-v2
+  to: g4-v5
+- data:
+    flow: 166449.5
+    per_second: 14
+    unit_size: 11889.25
+  from: g4-v3
   to: g4-v4
 - data:
-    flow: 57422.75
+    flow: 53807.875
     per_second: 11
-    unit_size: 5220.25
-  from: g4-v1
-  to: g4-v6
-- data:
-    flow: 116693.25
-    per_second: 19
-    unit_size: 6141.75
-  from: g4-v2
-  to: g4-v8
-- data:
-    flow: 140071.5
-    per_second: 17
-    unit_size: 8239.5
+    unit_size: 4891.625
   from: g4-v3
   to: g4-v6
 - data:
-    flow: 187078.5
-    per_second: 18
-    unit_size: 10393.25
+    flow: 35937.0
+    per_second: 11
+    unit_size: 3267.0
   from: g4-v4
-  to: g4-v5
+  to: g4-v7
 - data:
-    flow: 45663.75
-    per_second: 15
-    unit_size: 3044.25
+    flow: 68198.125
+    per_second: 19
+    unit_size: 3589.375
   from: g4-v5
   to: g4-v7
 - data:
-    flow: 46644.75
-    per_second: 18
-    unit_size: 2591.375
-  from: g4-v6
-  to: g4-v7
-- data:
-    flow: 91350.0
-    per_second: 20
-    unit_size: 4567.5
+    flow: 18697.25
+    per_second: 11
+    unit_size: 1699.75
   from: g4-v6
   to: g4-v8
 - data:
-    flow: 16335.25
+    flow: 25684.4375
     per_second: 19
-    unit_size: 859.75
+    unit_size: 1351.8125
+  from: g4-v6
+  to: g4-v10
+- data:
+    flow: 22652.5
+    per_second: 10
+    unit_size: 2265.25
   from: g4-v7
-  to: g4-v11
+  to: g4-v8
 - data:
-    flow: 20421.25
+    flow: 40100.0
     per_second: 20
-    unit_size: 1021.0625
-  from: g4-v8
-  to: g4-v10
-- data:
-    flow: 17587.5
-    per_second: 14
-    unit_size: 1256.25
-  from: g4-v8
-  to: g4-v11
-- data:
-    flow: 21523.4375
-    per_second: 19
-    unit_size: 1132.8125
-  from: g4-v9
-  to: g4-v10
+    unit_size: 2005.0
+  from: g4-v7
+  to: g4-v9
 uuid: g4
 vertices:
   g4-v0:
     domain_constraint:
-      host: rasp3
-    downstream_bd: 1617343.5
+      host: rasp1
+    downstream_bd: 1178518.875
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -750,12 +680,12 @@ vertices:
     upstream_bd: 0
   g4-v1:
     domain_constraint: {}
-    downstream_bd: 415176.25
+    downstream_bd: 207309.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 695170.0
+    upstream_bd: 438700.0
   g4-v10:
     domain_constraint:
       host: cloud1
@@ -764,8 +694,56 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 41944.6875
-  g4-v11:
+    upstream_bd: 25684.4375
+  g4-v2:
+    domain_constraint: {}
+    downstream_bd: 289171.25
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 677180.0
+  g4-v3:
+    domain_constraint: {}
+    downstream_bd: 220257.375
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 360449.0
+  g4-v4:
+    domain_constraint: {}
+    downstream_bd: 35937.0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 166449.5
+  g4-v5:
+    domain_constraint: {}
+    downstream_bd: 68198.125
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 136031.25
+  g4-v6:
+    domain_constraint: {}
+    downstream_bd: 44381.6875
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 116446.75
+  g4-v7:
+    domain_constraint: {}
+    downstream_bd: 62752.5
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: operator
+    upstream_bd: 104135.125
+  g4-v8:
     domain_constraint:
       host: cloud1
     downstream_bd: 0
@@ -773,133 +751,78 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 33922.75
-  g4-v2:
-    domain_constraint: {}
-    downstream_bd: 116693.25
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 669696.0
-  g4-v3:
-    domain_constraint: {}
-    downstream_bd: 140071.5
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 106915.0
-  g4-v4:
-    domain_constraint: {}
-    downstream_bd: 187078.5
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 250838.5
-  g4-v5:
-    domain_constraint: {}
-    downstream_bd: 45663.75
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 419743.5
-  g4-v6:
-    domain_constraint: {}
-    downstream_bd: 137994.75
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 197494.25
-  g4-v7:
-    domain_constraint: {}
-    downstream_bd: 16335.25
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 92308.5
-  g4-v8:
-    domain_constraint: {}
-    downstream_bd: 38008.75
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 208043.25
+    upstream_bd: 41349.75
   g4-v9:
-    domain_constraint: {}
-    downstream_bd: 21523.4375
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: operator
-    upstream_bd: 19812.5
+    type: sink
+    upstream_bd: 40100.0
 ---
 edges:
 - data:
-    flow: 418506.0
-    per_second: 17
-    unit_size: 24618.0
+    flow: 381780.0
+    per_second: 14
+    unit_size: 27270.0
   from: g5-v0
   to: g5-v1
 - data:
-    flow: 179508.0
+    flow: 171190.0
+    per_second: 20
+    unit_size: 8559.5
+  from: g5-v0
+  to: g5-v4
+- data:
+    flow: 45433.5
     per_second: 12
-    unit_size: 14959.0
+    unit_size: 3786.125
   from: g5-v0
-  to: g5-v2
+  to: g5-v5
 - data:
-    flow: 100432.5
-    per_second: 14
-    unit_size: 7173.75
-  from: g5-v0
-  to: g5-v3
-- data:
-    flow: 346132.5
-    per_second: 19
-    unit_size: 18217.5
+    flow: 223795.0
+    per_second: 10
+    unit_size: 22379.5
   from: g5-v1
   to: g5-v2
 - data:
-    flow: 59709.375
-    per_second: 15
-    unit_size: 3980.625
-  from: g5-v2
-  to: g5-v4
+    flow: 90769.25
+    per_second: 11
+    unit_size: 8251.75
+  from: g5-v1
+  to: g5-v3
 - data:
-    flow: 36384.25
-    per_second: 14
-    unit_size: 2598.875
-  from: g5-v3
+    flow: 110132.5
+    per_second: 20
+    unit_size: 5506.625
+  from: g5-v1
   to: g5-v5
 - data:
-    flow: 14186.5625
-    per_second: 11
-    unit_size: 1289.6875
-  from: g5-v3
-  to: g5-v6
-- data:
-    flow: 11578.0
+    flow: 10851.75
     per_second: 14
-    unit_size: 827.0
-  from: g5-v4
+    unit_size: 775.125
+  from: g5-v3
+  to: g5-v8
+- data:
+    flow: 15033.0
+    per_second: 12
+    unit_size: 1252.75
+  from: g5-v5
   to: g5-v6
 - data:
-    flow: 29788.75
-    per_second: 20
-    unit_size: 1489.4375
-  from: g5-v4
+    flow: 24345.5625
+    per_second: 18
+    unit_size: 1352.53125
+  from: g5-v6
   to: g5-v7
 uuid: g5
 vertices:
   g5-v0:
     domain_constraint:
-      host: rasp1
-    downstream_bd: 698446.5
+      host: rasp2
+    downstream_bd: 598403.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -907,54 +830,54 @@ vertices:
     upstream_bd: 0
   g5-v1:
     domain_constraint: {}
-    downstream_bd: 346132.5
+    downstream_bd: 424696.75
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 418506.0
+    upstream_bd: 381780.0
   g5-v2:
-    domain_constraint: {}
-    downstream_bd: 59709.375
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: operator
-    upstream_bd: 525640.5
+    type: sink
+    upstream_bd: 223795.0
   g5-v3:
     domain_constraint: {}
-    downstream_bd: 50570.8125
+    downstream_bd: 10851.75
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 100432.5
+    upstream_bd: 90769.25
   g5-v4:
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: sink
+    upstream_bd: 171190.0
+  g5-v5:
     domain_constraint: {}
-    downstream_bd: 41366.75
+    downstream_bd: 15033.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 59709.375
-  g5-v5:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 36384.25
+    upstream_bd: 155566.0
   g5-v6:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
+    domain_constraint: {}
+    downstream_bd: 24345.5625
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: sink
-    upstream_bd: 25764.5625
+    type: operator
+    upstream_bd: 15033.0
   g5-v7:
     domain_constraint:
       host: cloud1
@@ -963,81 +886,90 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 29788.75
+    upstream_bd: 24345.5625
+  g5-v8:
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: sink
+    upstream_bd: 10851.75
 ---
 edges:
 - data:
-    flow: 652574.0
-    per_second: 19
-    unit_size: 34346.0
+    flow: 695220.0
+    per_second: 15
+    unit_size: 46348.0
   from: g6-v0
   to: g6-v1
 - data:
-    flow: 501735.0
-    per_second: 13
-    unit_size: 38595.0
+    flow: 847080.0
+    per_second: 18
+    unit_size: 47060.0
   from: g6-v0
   to: g6-v2
 - data:
-    flow: 335410.0
-    per_second: 17
-    unit_size: 19730.0
+    flow: 219800.0
+    per_second: 14
+    unit_size: 15700.0
   from: g6-v0
   to: g6-v3
 - data:
-    flow: 139867.5
-    per_second: 17
-    unit_size: 8227.5
-  from: g6-v1
-  to: g6-v4
-- data:
-    flow: 126981.0
-    per_second: 18
-    unit_size: 7054.5
-  from: g6-v1
-  to: g6-v5
-- data:
-    flow: 24350.0
-    per_second: 16
-    unit_size: 1521.875
-  from: g6-v3
-  to: g6-v9
-- data:
-    flow: 83350.0
-    per_second: 16
-    unit_size: 5209.375
-  from: g6-v4
-  to: g6-v6
-- data:
-    flow: 55895.625
+    flow: 31393.125
     per_second: 15
-    unit_size: 3726.375
-  from: g6-v5
+    unit_size: 2092.875
+  from: g6-v1
   to: g6-v7
 - data:
-    flow: 38043.25
-    per_second: 14
-    unit_size: 2717.375
-  from: g6-v7
+    flow: 71917.375
+    per_second: 19
+    unit_size: 3785.125
+  from: g6-v2
+  to: g6-v5
+- data:
+    flow: 31647.75
+    per_second: 12
+    unit_size: 2637.3125
+  from: g6-v2
+  to: g6-v6
+- data:
+    flow: 84707.5
+    per_second: 10
+    unit_size: 8470.75
+  from: g6-v3
+  to: g6-v4
+- data:
+    flow: 56288.75
+    per_second: 20
+    unit_size: 2814.4375
+  from: g6-v3
+  to: g6-v6
+- data:
+    flow: 61197.5
+    per_second: 20
+    unit_size: 3059.875
+  from: g6-v4
+  to: g6-v5
+- data:
+    flow: 27219.0
+    per_second: 16
+    unit_size: 1701.1875
+  from: g6-v4
+  to: g6-v7
+- data:
+    flow: 11916.5625
+    per_second: 15
+    unit_size: 794.4375
+  from: g6-v5
   to: g6-v8
-- data:
-    flow: 20299.59375
-    per_second: 17
-    unit_size: 1194.09375
-  from: g6-v7
-  to: g6-v11
-- data:
-    flow: 23677.28125
-    per_second: 17
-    unit_size: 1392.78125
-  from: g6-v8
-  to: g6-v10
 uuid: g6
 vertices:
   g6-v0:
     domain_constraint:
-      host: rasp1
-    downstream_bd: 1489719.0
+      host: rasp2
+    downstream_bd: 1762100.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -1045,63 +977,44 @@ vertices:
     upstream_bd: 0
   g6-v1:
     domain_constraint: {}
-    downstream_bd: 266848.5
+    downstream_bd: 31393.125
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 652574.0
-  g6-v10:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 23677.28125
-  g6-v11:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: sink
-    upstream_bd: 20299.59375
+    upstream_bd: 695220.0
   g6-v2:
-    domain_constraint:
-      host: cloud1
-    downstream_bd: 0
+    domain_constraint: {}
+    downstream_bd: 103565.125
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: sink
-    upstream_bd: 501735.0
+    type: operator
+    upstream_bd: 847080.0
   g6-v3:
     domain_constraint: {}
-    downstream_bd: 24350.0
+    downstream_bd: 140996.25
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 335410.0
+    upstream_bd: 219800.0
   g6-v4:
     domain_constraint: {}
-    downstream_bd: 83350.0
+    downstream_bd: 88416.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 139867.5
+    upstream_bd: 84707.5
   g6-v5:
     domain_constraint: {}
-    downstream_bd: 55895.625
+    downstream_bd: 11916.5625
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 126981.0
+    upstream_bd: 133114.875
   g6-v6:
     domain_constraint:
       host: cloud1
@@ -1110,24 +1023,8 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 83350.0
+    upstream_bd: 87936.5
   g6-v7:
-    domain_constraint: {}
-    downstream_bd: 58342.84375
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 55895.625
-  g6-v8:
-    domain_constraint: {}
-    downstream_bd: 23677.28125
-    memory: 200000000
-    mi: 1
-    out_unit_size: 0
-    type: operator
-    upstream_bd: 38043.25
-  g6-v9:
     domain_constraint:
       host: cloud1
     downstream_bd: 0
@@ -1135,93 +1032,108 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 24350.0
+    upstream_bd: 58612.125
+  g6-v8:
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
+    memory: 200000000
+    mi: 1
+    out_unit_size: 0
+    type: sink
+    upstream_bd: 11916.5625
 ---
 edges:
 - data:
-    flow: 665518.0
+    flow: 693112.0
     per_second: 14
-    unit_size: 47537.0
+    unit_size: 49508.0
   from: g7-v0
   to: g7-v1
 - data:
-    flow: 761920.0
-    per_second: 16
-    unit_size: 47620.0
+    flow: 116539.5
+    per_second: 11
+    unit_size: 10594.5
   from: g7-v0
   to: g7-v2
 - data:
-    flow: 206550.0
-    per_second: 15
-    unit_size: 13770.0
-  from: g7-v0
-  to: g7-v4
-- data:
-    flow: 193305.0
-    per_second: 20
-    unit_size: 9665.25
-  from: g7-v1
-  to: g7-v5
-- data:
-    flow: 195049.5
+    flow: 415803.0
     per_second: 17
-    unit_size: 11473.5
-  from: g7-v2
+    unit_size: 24459.0
+  from: g7-v0
   to: g7-v3
 - data:
-    flow: 76321.0
-    per_second: 14
-    unit_size: 5451.5
-  from: g7-v3
-  to: g7-v6
-- data:
-    flow: 47943.1875
-    per_second: 17
-    unit_size: 2820.1875
-  from: g7-v3
-  to: g7-v8
-- data:
-    flow: 66052.25
+    flow: 63105.625
     per_second: 11
-    unit_size: 6004.75
-  from: g7-v4
-  to: g7-v5
-- data:
-    flow: 27634.25
-    per_second: 14
-    unit_size: 1973.875
-  from: g7-v5
-  to: g7-v8
-- data:
-    flow: 101985.125
-    per_second: 17
-    unit_size: 5999.125
-  from: g7-v6
+    unit_size: 5736.875
+  from: g7-v0
   to: g7-v7
 - data:
-    flow: 12055.78125
-    per_second: 15
-    unit_size: 803.71875
-  from: g7-v7
-  to: g7-v9
+    flow: 231737.0
+    per_second: 11
+    unit_size: 21067.0
+  from: g7-v1
+  to: g7-v2
 - data:
-    flow: 20112.6875
-    per_second: 19
-    unit_size: 1058.5625
+    flow: 355121.5
+    per_second: 17
+    unit_size: 20889.5
+  from: g7-v1
+  to: g7-v3
+- data:
+    flow: 108169.75
+    per_second: 13
+    unit_size: 8320.75
+  from: g7-v2
+  to: g7-v5
+- data:
+    flow: 80824.0
+    per_second: 16
+    unit_size: 5051.5
+  from: g7-v3
+  to: g7-v4
+- data:
+    flow: 107482.5
+    per_second: 18
+    unit_size: 5971.25
+  from: g7-v4
+  to: g7-v6
+- data:
+    flow: 58498.5
+    per_second: 12
+    unit_size: 4874.875
+  from: g7-v5
+  to: g7-v6
+- data:
+    flow: 31447.625
+    per_second: 11
+    unit_size: 2858.875
+  from: g7-v7
+  to: g7-v8
+- data:
+    flow: 16112.625
+    per_second: 12
+    unit_size: 1342.71875
+  from: g7-v7
+  to: g7-v10
+- data:
+    flow: 7228.75
+    per_second: 10
+    unit_size: 722.875
   from: g7-v8
   to: g7-v9
 - data:
-    flow: 26110.15625
-    per_second: 19
-    unit_size: 1374.21875
+    flow: 17965.875
+    per_second: 12
+    unit_size: 1497.15625
   from: g7-v8
   to: g7-v10
 uuid: g7
 vertices:
   g7-v0:
     domain_constraint:
-      host: rasp2
-    downstream_bd: 1633988.0
+      host: rasp3
+    downstream_bd: 1288560.125
     memory: 200000000
     mi: 1
     out_unit_size: 0
@@ -1229,12 +1141,12 @@ vertices:
     upstream_bd: 0
   g7-v1:
     domain_constraint: {}
-    downstream_bd: 193305.0
+    downstream_bd: 586858.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 665518.0
+    upstream_bd: 693112.0
   g7-v10:
     domain_constraint:
       host: cloud1
@@ -1243,63 +1155,64 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 26110.15625
+    upstream_bd: 34078.5
   g7-v2:
     domain_constraint: {}
-    downstream_bd: 195049.5
+    downstream_bd: 108169.75
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 761920.0
+    upstream_bd: 348276.5
   g7-v3:
     domain_constraint: {}
-    downstream_bd: 124264.1875
+    downstream_bd: 80824.0
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 195049.5
+    upstream_bd: 770924.5
   g7-v4:
     domain_constraint: {}
-    downstream_bd: 66052.25
+    downstream_bd: 107482.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 206550.0
+    upstream_bd: 80824.0
   g7-v5:
     domain_constraint: {}
-    downstream_bd: 27634.25
+    downstream_bd: 58498.5
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 259357.25
+    upstream_bd: 108169.75
   g7-v6:
-    domain_constraint: {}
-    downstream_bd: 101985.125
+    domain_constraint:
+      host: cloud1
+    downstream_bd: 0
     memory: 200000000
     mi: 1
     out_unit_size: 0
-    type: operator
-    upstream_bd: 76321.0
+    type: sink
+    upstream_bd: 165981.0
   g7-v7:
     domain_constraint: {}
-    downstream_bd: 12055.78125
+    downstream_bd: 47560.25
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 101985.125
+    upstream_bd: 63105.625
   g7-v8:
     domain_constraint: {}
-    downstream_bd: 46222.84375
+    downstream_bd: 25194.625
     memory: 200000000
     mi: 1
     out_unit_size: 0
     type: operator
-    upstream_bd: 75577.4375
+    upstream_bd: 31447.625
   g7-v9:
     domain_constraint:
       host: cloud1
@@ -1308,4 +1221,4 @@ vertices:
     mi: 1
     out_unit_size: 0
     type: sink
-    upstream_bd: 32168.46875
+    upstream_bd: 7228.75

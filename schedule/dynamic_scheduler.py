@@ -12,7 +12,7 @@ from .result import SchedulingResult, SchedulingResultStatus
 from .scheduler import RandomScheduler, Scheduler, SourcedGraph
 from sko.GA import GA
 from sko.tools import set_run_mode
-from pyscipopt import Model, quicksum
+from pyscipopt import Model, quicksum, Conshdlr
 from functools import partial
 from itertools import product
 
@@ -30,7 +30,7 @@ class DynamicScheduler(Scheduler):
     ) -> typing.List[SchedulingResult]:
         # vertices是算子列表，nodes是网络节点列表
         data = dict()
-        debug = True
+        debug = False
         if debug:
             with open("main_data.json", "r") as f:
                 load_data = json.loads(f.read())
@@ -40,7 +40,6 @@ class DynamicScheduler(Scheduler):
             get_lower_bound(graph_list, self.scenario, data)
             with open("main_data.json", "w") as f:
                 f.write(json.dumps(data))
-        lb = data["lb"]
         # ga(graph_list, self.scenario, data)
         bnb(graph_list, self.scenario, data)
         return None
@@ -152,6 +151,7 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     net_path_dest = data["net_path_dest"]
     net_edge_in_path = data["net_edge_in_path"]
     flow = data["flow"]
+    urate = data["urate"]
     for flow_edge in range(flow_edge_num):
         for net_path in range(net_path_num):
             model.addCons(quicksum(
@@ -186,7 +186,7 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     cores = data["cores"]
     cores_reciprocal = data["cores_reciprocal"]
     net_node_occupied = {}
-    M = 10000000
+    M = 100000000
     for net_node in range(net_node_num):
         # 每个计算节点，若占据任务不超过其核数，也不会给每个任务分配超过一核的算力
         # 因此每个计算节点的任务数算成其核数和实际任务数的最大值
@@ -202,13 +202,29 @@ def bnb(graph_list: typing.List[ExecutionGraph],
         model.addCons(occupied <= M * (1 - u2) + cores[net_node], name="net_node_occupied_3(%d)"%net_node)
         model.addCons(u1 + u2 == 1, name="net_node_occupied_4(%d)"%net_node)
         net_node_occupied[net_node] = (occupied, u1, u2)
+    net_node_occupied_with_f = {}
+    for flow_node in range(flow_node_num):
+        for net_node in range(net_node_num):
+            # if else语义也能转化成线性结构，下面就是一例
+            net_node_occupied_with_f[flow_node, net_node] = model.addVar(vtype="INTEGER", name="net_node_occupied_with_f(%d,%d)"%(flow_node,net_node))
+            model.addCons(net_node_occupied_with_f[flow_node, net_node] <= net_node_occupied[net_node][0] + (1 - f[flow_node, net_node]) * M,
+                          name="net_node_occupied_with_f_0(%d,%d)"%(flow_node,net_node))
+            model.addCons(net_node_occupied_with_f[flow_node, net_node] >= net_node_occupied[net_node][0] - (1 - f[flow_node, net_node]) * M,
+                          name="net_node_occupied_with_f_1(%d,%d)"%(flow_node,net_node))
+            model.addCons(net_node_occupied_with_f[flow_node, net_node] <= f[flow_node, net_node] * M,
+                          name="net_node_occupied_with_f_2(%d,%d)"%(flow_node,net_node))
+            model.addCons(net_node_occupied_with_f[flow_node, net_node] >= -f[flow_node, net_node] * M,
+                          name="net_node_occupied_with_f_3(%d,%d)"%(flow_node,net_node))
     for flow_node in range(flow_node_num):
         comp_lat[flow_node] = model.addVar(vtype="CONTINUOUS", name="comp_lat(%d)"%flow_node)
         op_lat[flow_node] = model.addVar(vtype="CONTINUOUS", name="op_lat(%d)"%flow_node)
         # model.addCons(mi[flow_node] * quicksum(f[flow_node, net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
         #               == comp_lat[flow_node],
         #               name="comp_lat(%d)"%flow_node)
-        model.addCons(mi[flow_node] * quicksum(f[flow_node, net_node] * net_node_occupied[net_node][0] * cores_reciprocal[net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
+        # model.addCons(mi[flow_node] * 1000 * quicksum(f[flow_node, net_node] * net_node_occupied[net_node][0] * cores_reciprocal[net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
+        #               == comp_lat[flow_node],
+        #               name="comp_lat(%d)"%flow_node)
+        model.addCons(mi[flow_node] * 1000 * quicksum(net_node_occupied_with_f[flow_node, net_node] * cores_reciprocal[net_node] * mips_reciprocal[net_node] for net_node in range(net_node_num))
                       == comp_lat[flow_node],
                       name="comp_lat(%d)"%flow_node)
     intr_lat = {}
@@ -216,33 +232,52 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     net_edge_intr_lat = data["net_edge_intr_lat"]
     bandwidth = data["bandwidth"]
     tuple_size = data["tuple_size"]
+    net_edge_flow_sum_with_flow_edge = {}
+    for flow_edge in range(flow_edge_num):
+        for net_edge in range(net_edge_num):
+            # if else语义也能转化成线性结构，下面就是一例
+            net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] = model.addVar(vtype="CONTINUOUS", name="net_edge_flow_sum_with_flow_edge(%d,%d)"%(flow_edge,net_edge))
+            model.addCons(net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] <= net_edge_flow_sum[net_edge] + (1 - net_edge_in_flow_edge[net_edge, flow_edge]) * M,
+                          name="net_edge_flow_sum_with_flow_edge_0(%d,%d)"%(flow_edge,net_edge))
+            model.addCons(net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] >= net_edge_flow_sum[net_edge] - (1 - net_edge_in_flow_edge[net_edge, flow_edge]) * M,
+                          name="net_edge_flow_sum_with_flow_edge_1(%d,%d)"%(flow_edge,net_edge))
+            model.addCons(net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] <= net_edge_in_flow_edge[net_edge, flow_edge] * M,
+                          name="net_edge_flow_sum_with_flow_edge_2(%d,%d)"%(flow_edge,net_edge))
+            model.addCons(net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] >= -net_edge_in_flow_edge[net_edge, flow_edge] * M,
+                          name="net_edge_flow_sum_with_flow_edge_3(%d,%d)"%(flow_edge,net_edge))
     for flow_edge in range(flow_edge_num):
         intr_lat[flow_edge] = model.addVar(vtype="CONTINUOUS", name="intr_lat(%d)"%flow_edge)
         tran_lat[flow_edge] = model.addVar(vtype="CONTINUOUS", name="tran_lat(%d)"%flow_edge)
         model.addCons(quicksum(net_edge_in_flow_edge[net_edge, flow_edge] * net_edge_intr_lat[net_edge] for net_edge in range(net_edge_num))
                       == intr_lat[flow_edge],
                       name="intr_lat(%d)"%flow_edge)
-        # model.addCons(tuple_size[flow_edge] * quicksum(net_edge_in_flow_edge[net_edge, flow_edge] / bandwidth[net_edge] for net_edge in range(net_edge_num))
+        # model.addCons(tuple_size[flow_edge] * 1000 * quicksum(net_edge_in_flow_edge[net_edge, flow_edge] / bandwidth[net_edge] for net_edge in range(net_edge_num))
         #               == tran_lat[flow_edge],
         #               name="tran_lat(%d)"%flow_edge)
-        model.addCons(tuple_size[flow_edge] * quicksum(net_edge_in_flow_edge[net_edge, flow_edge] * net_edge_flow_sum[net_edge] / (bandwidth[net_edge] * flow[flow_edge]) for net_edge in range(net_edge_num))
+        # model.addCons(tuple_size[flow_edge] * 1000 * quicksum(net_edge_in_flow_edge[net_edge, flow_edge] * net_edge_flow_sum[net_edge] / (bandwidth[net_edge] * flow[flow_edge]) for net_edge in range(net_edge_num))
+        #               == tran_lat[flow_edge],
+        #               name="tran_lat(%d)"%flow_edge)
+        model.addCons(tuple_size[flow_edge] * 1000 * quicksum(net_edge_flow_sum_with_flow_edge[net_edge, flow_edge] / (bandwidth[net_edge] * flow[flow_edge]) for net_edge in range(net_edge_num))
                       == tran_lat[flow_edge],
                       name="tran_lat(%d)"%flow_edge)
-    in_flow_sum_reciprocal = copy.deepcopy(data["in_flow_sum_reciprocal"])
+    in_urate_sum_reciprocal = copy.deepcopy(data["in_urate_sum_reciprocal"])
     for i in range(flow_node_num):
-        in_flow_sum_reciprocal[i] = float(in_flow_sum_reciprocal[i])
+        in_urate_sum_reciprocal[i] = float(in_urate_sum_reciprocal[i])
     op_in_edge = data["op_in_edge"]
     flow_endpoint = data["flow_endpoint"]
     for flow_node in range(flow_node_num):
-        model.addCons(comp_lat[flow_node] + quicksum(flow[flow_edge] * (tran_lat[flow_edge] + intr_lat[flow_edge] +
+        model.addCons(comp_lat[flow_node] + quicksum(urate[flow_edge] * (tran_lat[flow_edge] + intr_lat[flow_edge] +
                     op_lat[flow_endpoint[flow_edge][0]]) for flow_edge in op_in_edge[flow_node])
-                    * in_flow_sum_reciprocal[flow_node] == op_lat[flow_node],
+                    * in_urate_sum_reciprocal[flow_node] == op_lat[flow_node],
                     name="op_lat(%d)"%flow_node)
     lat = model.addVar(vtype="CONTINUOUS", name="lat")
     sinks = data["sinks"]
-    in_flow_sum = data["in_flow_sum"]
-    sink_in_flow_sum = data["sink_in_flow_sum"]
-    model.addCons(quicksum(op_lat[sink] * in_flow_sum[sink] for sink in sinks) / sink_in_flow_sum == lat,
+    sink_num = len(sinks)
+    in_urate_sum = data["in_urate_sum"]
+    sink_in_urate_sum = data["sink_in_urate_sum"]
+    # model.addCons(quicksum(op_lat[sink] * in_urate_sum[sink] for sink in sinks) / sink_in_urate_sum == lat,
+    #               name="lat")
+    model.addCons(quicksum(op_lat[sink] for sink in sinks) / sink_num == lat,
                   name="lat")
     # 云边流量相关中间变量
     flow_edge_cross = {}
@@ -299,8 +334,8 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     flow_min = data["flow_min"]
     lat_min = data["lat_min"]
     model.setObjective(flow_cross/flow_min + lat/lat_min, sense="minimize")
-    model.hideOutput()
-    model.optimize() 
+    # model.hideOutput()
+    model.optimize()
     sol = model.getBestSol()
     
     flow_cross = sol[flow_cross]
@@ -310,6 +345,22 @@ def bnb(graph_list: typing.List[ExecutionGraph],
     #     for flow_edge in range(flow_edge_num):
     #         print(int(sol[net_edge_in_flow_edge[net_edge, flow_edge]]), end=" ")
     #     print()
+    # print()
+    # print("comp_lat")
+    # for flow_node in range(flow_node_num):
+    #     print(sol[comp_lat[flow_node]], end=" ")
+    # print()
+    # print("tran_lat")
+    # for flow_edge in range(flow_edge_num):
+    #     print(sol[tran_lat[flow_edge]], end=" ")
+    # print()
+    # print("intr_lat")
+    # for flow_edge in range(flow_edge_num):
+    #     print(sol[intr_lat[flow_edge]], end=" ")
+    # print()
+    # print("op_lat")
+    # for flow_node in range(flow_node_num):
+    #     print(sol[op_lat[flow_node]], end=" ")
     # print()
     print("flow: {}, lat: {}".format(flow_cross, lat))
     print("flow_min: {}, lat_min: {}".format(flow_min, lat_min))

@@ -7,11 +7,12 @@ set flow_edges := 0..flow_edge_num-1;
 param flow_incidence{flow_nodes, flow_edges}, integer; #流式计算图的关联矩阵
 param mi{flow_nodes}, >0; #算子平均每条数据所需算力
 param flow{flow_edges}, >0; #流式计算边流量
+param urate{flow_edges}, >0; #流式计算边数据频率
 param flow_node_is_sink{flow_nodes}, binary;
 param tuple_size{flow_edges}, >0; #流式计算边一个数据元组的数据量
 param in_flow_edge{flow_nodes, flow_edges}, binary; #算子的入边
 param out_flow_edge{flow_nodes, flow_edges}, binary; #算子的出边
-param in_flow_sum_reciprocal{flow_nodes}; #算子入边流量之和的倒数
+param in_urate_sum_reciprocal{flow_nodes}; #算子入边数据频率之和的倒数
 param flow_edge_s{flow_edges}, symbolic in flow_nodes; #流式计算边起点
 ## 实际网络相关
 param net_node_num, integer, >0; #计算节点数量
@@ -70,7 +71,7 @@ var flow_cross; #跨云边流量
 minimize obj: flow_cross / flow_min + lat / lat_min;
 # 主要约束
 subject to 
-    ## 不允许边边通信、从云到边的通信
+    # 不允许边边通信、从云到边的通信
     no_edge_to_edge_1{i in flow_edges, j in edge_domains}:  
         sum{k in flow_nodes, l in net_nodes}
         flow_incidence[k,i] * f[k,l] * net_node_in_edge[l,j], <=1;
@@ -114,19 +115,19 @@ subject to
     compute_power_ratio_f_{i in flow_nodes}:
         compute_power_ratio_f[i] = sum{j in net_nodes} f[i,j] * mips_reciprocal[j];
     comp_lat_lowerbound{i in flow_nodes}:
-        comp_lat[i] = mi[i] * compute_power_ratio_f[i];
+        comp_lat[i] = mi[i] * 1000 * compute_power_ratio_f[i];
     flow_edge_intr_lat_{i in flow_edges}:
         flow_edge_intr_lat[i] = sum{j in net_edges} net_edge_in_flow_edge[j,i] * net_edge_intr_lat[j];
     tran_lat_lowerbound{i in flow_edges}:
-        tran_lat[i] = sum{j in net_edges} tuple_size[i] * net_edge_in_flow_edge[j,i] / bandwidth[j];
+        tran_lat[i] = sum{j in net_edges} tuple_size[i] * 1000 * net_edge_in_flow_edge[j,i] / bandwidth[j];
     lat_operator_{i in flow_nodes}:
         lat_operator[i] = comp_lat[i] + 
-            (sum{j in flow_edges} in_flow_edge[i,j] * flow[j] * (lat_operator[flow_edge_s[j]] + tran_lat[j] + flow_edge_intr_lat[j] )) *
+            (sum{j in flow_edges} in_flow_edge[i,j] * urate[j] * (lat_operator[flow_edge_s[j]] + tran_lat[j] + flow_edge_intr_lat[j])) *
             # (sum{j in flow_edges} in_flow_edge[i,j] * flow[j]);
-            in_flow_sum_reciprocal[i];
+            in_urate_sum_reciprocal[i];
     lat_:
-        lat = (sum{i in flow_nodes} flow_node_is_sink[i] * lat_operator[i] * (sum{j in flow_edges} in_flow_edge[i,j] * flow[j])) /
-              (sum{i in flow_nodes} flow_node_is_sink[i] * (sum{j in flow_edges} in_flow_edge[i,j] * flow[j]));
+        lat = (sum{i in flow_nodes} flow_node_is_sink[i] * lat_operator[i] * (sum{j in flow_edges} in_flow_edge[i,j] * urate[j])) /
+              (sum{i in flow_nodes} flow_node_is_sink[i] * (sum{j in flow_edges} in_flow_edge[i,j] * urate[j]));
 ## 跨云边流量相关
 subject to
     flow_node_in_cloud_{i in flow_nodes}:

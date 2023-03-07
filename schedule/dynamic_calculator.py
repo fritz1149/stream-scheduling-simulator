@@ -51,6 +51,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             row[i] = -row[i]
     mi = [e[1] for e in graph_merge.nodes.data("mi")]
     flow = [e[2] for e in graph_merge.edges.data("flow")]
+    urate = [e[2] for e in graph_merge.edges.data("per_second")]
     flow_node_is_sink = [1 if v[1] == "sink" else 0 for v in graph_merge.nodes.data("type")]
     tuple_size = [e[2] for e in graph_merge.edges.data("unit_size")]
     in_flow_edge = [[0 for _ in range(flow_edge_num)] for _ in range(flow_node_num)]
@@ -64,6 +65,22 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             else:
                 out_flow_edge[i][j] = 1
     flow_edge_s = [e[0] for e in graph_merge.edges]
+    in_urate_sum = [0 for _ in range(flow_node_num)]
+    in_urate_sum_reciprocal = [0 for _ in range(flow_node_num)]
+    for node in range(flow_node_num):
+        for edge in range(flow_edge_num):
+            in_urate_sum[node] += urate[edge] * in_flow_edge[node][edge]
+    sink_in_urate_sum = 0
+    # for node in range(flow_node_num):
+    #     print("%d %d\n"%(flow_node_is_sink[node], in_urate_sum_reciprocal[node]))
+    for node in range(flow_node_num):
+        if flow_node_is_sink[node] == 1:
+            sink_in_urate_sum = sink_in_urate_sum + in_urate_sum[node]
+        if in_urate_sum[node] != 0:
+            in_urate_sum_reciprocal[node] = 1 / in_urate_sum[node]
+        in_urate_sum_reciprocal[node] = np.format_float_positional(in_urate_sum_reciprocal[node], trim='-')
+    print("sink_in_urate_sum: {}".format(sink_in_urate_sum))
+    
     in_flow_sum = [0 for _ in range(flow_node_num)]
     in_flow_sum_reciprocal = [0 for _ in range(flow_node_num)]
     for node in range(flow_node_num):
@@ -79,6 +96,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             in_flow_sum_reciprocal[node] = 1 / in_flow_sum[node]
         in_flow_sum_reciprocal[node] = np.format_float_positional(in_flow_sum_reciprocal[node], trim='-')
     print("sink_in_flow_sum: {}".format(sink_in_flow_sum))
+    
     # 实际网络相关
     net = scenario.topo.g
     net_node_num = len(net.nodes)
@@ -194,12 +212,12 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
     mips = [e[1] for e in net.nodes.data("mips")]
     
     param_list = [
-        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
-        "in_flow_edge", "out_flow_edge", "in_flow_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
+        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "urate", "flow_node_is_sink", "tuple_size",
+        "in_flow_edge", "out_flow_edge", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
         "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
-        "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_flow_sum", "op_in_edge", "op_out_edge",
-        "in_flow_sum", "op_indegree", "mips", "cores_reciprocal"
+        "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_urate_sum", "op_in_edge", "op_out_edge",
+        "in_urate_sum", "in_urate_sum_reciprocal", "in_flow_sum", "in_flow_sum_reciprocal", "op_indegree", "mips", "cores_reciprocal"
     ]
     items = locals()
     for name in param_list:
@@ -296,8 +314,8 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
     # print(nx.incidence_matrix(G=graph_0.g, oriented=True).toarray().astype(np.int32).tolist())
     
     param_list = [
-        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "flow_node_is_sink", "tuple_size",
-        "in_flow_edge", "out_flow_edge", "in_flow_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
+        "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "urate", "flow_node_is_sink", "tuple_size",
+        "in_flow_edge", "out_flow_edge", "in_urate_sum_reciprocal", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
         "flow_node_restr", "net_incidence", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
     ]
@@ -311,20 +329,21 @@ def get_lower_bound(graph_list: typing.List[ExecutionGraph],
     data["flow_min"] = flow_min
     data["lat_min"] = lat_min
 
-    param_list.extend(["flow_min", "lat_min"])
-    with open("../glpk/data/lower_bound_data", "w") as f:
-        gen_data_file(f, data, param_list)
-    result = subprocess.run(
-            ["glpsol", "--model", "../glpk/model/lower_bound.mod", "--data", "../glpk/data/lower_bound_data", "--tmlim", "30"],
-            capture_output=True
-        )
-    output = result.stdout.decode("ASCII")
-    lb = output.split("\n")[-3].strip()
-    lb = float(lb)
-    print("lower_bound: %s"%lb)
-    data["lb"] = lb
-    
-    return lb
+    # param_list.extend(["flow_min", "lat_min"])
+    # with open("../glpk/data/lower_bound_data", "w") as f:
+    #     gen_data_file(f, data, param_list)
+    # result = subprocess.run(
+    #         ["glpsol", "--model", "../glpk/model/lower_bound.mod", "--data", "../glpk/data/lower_bound_data", "--tmlim", "30"],
+    #         capture_output=True
+    #     )
+    # output = result.stdout.decode("ASCII")
+    # lb = output.split("\n")[-3].strip()
+    # lb = float(lb)
+    # print("lower_bound: %s"%lb)
+    # data["lb"] = lb
+    # return lb
+
+    return 0
 
 # 计算特定部署方案的目标值
 def obj(f: typing.List,
@@ -387,18 +406,18 @@ def obj(f: typing.List,
     #     print("flow_endpoint: {}".format(flow_endpoint))
     #     print("op_in_edge: {}".format(op_in_edge))
     #     print("op_out_edge: {}".format(op_out_edge))
-    in_flow_sum = data["in_flow_sum"]
+    in_urate_sum = data["in_urate_sum"]
     op_indegree = copy.deepcopy(data["op_indegree"])
     queue = copy.deepcopy(sources)
     head = 0
     tail = len(sources)
     while head < tail:
         node = queue[head]
-        if in_flow_sum[node] != 0:
+        if in_urate_sum[node] != 0:
             for edge in op_in_edge[node]:
                 origin = flow_endpoint[edge][0]
                 op_lat[node] = op_lat[node] + flow[edge] * (op_lat[origin] + tran_lat[edge] + intr_lat[edge])
-            op_lat[node] = op_lat[node] / in_flow_sum[node] + comp_lat[node]
+            op_lat[node] = op_lat[node] / in_urate_sum[node] + comp_lat[node]
         else:
             op_lat[node] = comp_lat[node]
         # if debug:
@@ -415,12 +434,12 @@ def obj(f: typing.List,
     
     lat = 0
     sinks = data["sinks"]
-    sink_in_flow_sum = data["sink_in_flow_sum"]
+    sink_in_urate_sum = data["sink_in_urate_sum"]
     for node in sinks:
         # if debug:
-        #     print("node: {}, op_lat: {}, in_flow_sum: {}".format(node, op_lat[node], in_flow_sum[node]))
-        lat = lat + op_lat[node] * in_flow_sum[node]
-    lat = lat / sink_in_flow_sum
+        #     print("node: {}, op_lat: {}, in_urate_sum: {}".format(node, op_lat[node], in_urate_sum[node]))
+        lat = lat + op_lat[node] * in_urate_sum[node]
+    lat = lat / sink_in_urate_sum
     
     flow_ = 0
     net_node_in_cloud = data["net_node_in_cloud"]

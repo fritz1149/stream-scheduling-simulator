@@ -55,7 +55,8 @@ def run():
     sc.topo.clear_occupied()
     dynamic_scheduler = sch.DynamicScheduler(sc)
     dynamic_scheduler.schedule_multiple(graph_list)
-    return
+    print()
+    # return
     
     sc.topo.clear_occupied()
     flow_scheduler = sch.FlowScheduler(sc)
@@ -68,12 +69,13 @@ def run():
             print("none")
             continue
         flow_calculator.add_scheduled_graph(g, result)
-    flow_latency, flow_bp = flow_calculator.compute_latency()
-    print(flow_latency)
-    print(flow_bp)
-    print(sum(flow_latency.values()))
-    print(sum(flow_latency.values()) / len(flow_latency))
+    flow_latency, flow_bp, flow_bd_cross = flow_calculator.compute_latency()
+    # print(flow_latency)
+    # print(flow_bp)
+    print("flow:", flow_bd_cross, "lat:", sum(flow_latency.values()) / len(flow_latency))
+    # print(sum(flow_latency.values()))
     print(sum(flow_bp.values()) / len(flow_bp))
+    print()
 
     sc.topo.clear_occupied()
     all_cloud_scheduler = sch.RandomScheduler(sc)
@@ -105,12 +107,13 @@ def run():
             continue
         result = sch.SchedulingResult.merge(s_result, t_result)
         all_cloud_calculator.add_scheduled_graph(g, result)
-    all_cloud_latency, all_cloud_bp = all_cloud_calculator.compute_latency()
-    print(all_cloud_latency)
-    print(all_cloud_bp)
-    print(sum(all_cloud_latency.values()))
-    print(sum(all_cloud_latency.values()) / len(all_cloud_latency))
+    all_cloud_latency, all_cloud_bp, all_cloud_bd_cross = all_cloud_calculator.compute_latency()
+    # print(all_cloud_latency)
+    # print(all_cloud_bp)
+    # print(sum(all_cloud_latency.values()))
+    print("flow:", all_cloud_bd_cross, "lat:", sum(all_cloud_latency.values()) / len(all_cloud_latency))
     print(sum(all_cloud_bp.values()) / len(all_cloud_bp))
+    print()
 
 
 if __name__ == "__main__":

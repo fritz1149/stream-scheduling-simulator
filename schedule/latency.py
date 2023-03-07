@@ -50,7 +50,7 @@ class LatencyCalculator:
             bp_rate[g.graph.uuid] = bp / len(g.graph.get_edges())
             cross_bd += bd
         # print("cloud-edge bd:", cross_bd)
-        return latency, bp_rate
+        return latency, bp_rate, cross_bd
 
     def topological_graph_latency(
         self, g: ScheduledGraph

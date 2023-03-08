@@ -74,7 +74,7 @@ def run():
     # print(flow_bp)
     print("flow:", flow_bd_cross, "lat:", sum(flow_latency.values()) / len(flow_latency))
     # print(sum(flow_latency.values()))
-    print(sum(flow_bp.values()) / len(flow_bp))
+    # print(sum(flow_bp.values()) / len(flow_bp))
     print()
 
     sc.topo.clear_occupied()
@@ -112,7 +112,7 @@ def run():
     # print(all_cloud_bp)
     # print(sum(all_cloud_latency.values()))
     print("flow:", all_cloud_bd_cross, "lat:", sum(all_cloud_latency.values()) / len(all_cloud_latency))
-    print(sum(all_cloud_bp.values()) / len(all_cloud_bp))
+    # print(sum(all_cloud_bp.values()) / len(all_cloud_bp))
     print()
 
 

@@ -79,7 +79,14 @@ class LatencyCalculator:
                 )
                 for u in up_vertices
             ]
-
+            # print("intr_lat:")
+            # for lat in intri_lat:
+            #     print(lat, end=" ")
+            # print()
+            # print("trans_lat:")
+            # for lat in trans_lat:
+            #     print(lat, end=" ")
+            # print()
             # NOTE cross cloud-edge bandwidth usage
             for u in up_vertices:
                 node_u = g.result.get_scheduled_node(u.uuid)
@@ -120,6 +127,9 @@ class LatencyCalculator:
             latency_dict[v.uuid] = up_latency + self.topo.get_computation_latency(
                 g.result.get_scheduled_node(v.uuid), g.graph.get_vertex(v.uuid).mi
             )
+            # print(v.uuid, g.result.get_scheduled_node(v.uuid), latency_dict[v.uuid])
+            # print(g.graph.get_vertex(v.uuid).mi, self.topo.g.nodes[g.result.get_scheduled_node(v.uuid)]["mips"])
+            # print(up_latency)
             # self.logger.info(
             #     "vertex %s: %s, com %d",
             #     v.uuid,

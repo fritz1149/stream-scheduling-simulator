@@ -21,42 +21,37 @@ def run():
     sc = topo.Scenario.from_dict(
         yaml.load(open("../../samples/1e3h.yaml", "r").read(), Loader=yaml.Loader)
     )
-    source_selector = graph.SourceSelector({"rasp1": 4, "rasp2": 4, "rasp3": 4})
-    gen_args_list = [
-        {
-            "total_rank": random.randint(7, 7),
-            "max_node_per_rank": random.randint(2, 2),
-            "max_predecessors": random.randint(2, 2),
-            # "mi_cb": lambda: int(math.pow(10, (random.random() * 1) + 0)),
-            "mi_cb": lambda: 1,
-            "memory_cb": lambda: int(2e8),
-            # "unit_size_cb": lambda: int(math.pow(10, (random.random() * 1) + 4)),
-            # "unit_rate_cb": lambda: int(math.pow(10, (random.random() * 1) + 1)),
-            "unit_size_cb": lambda r: random.randint(20000, 50000)
-            / (math.pow(2, r - 1)),
-            "unit_rate_cb": lambda: random.randint(10, 20),
-            "source_hosts": source_selector,
-            "sink_hosts": ["cloud1"],
-        }
-        for _ in range(8)
-    ]
-    graph_list = [
-        graph.GraphGenerator("g" + str(idx), **gen_args).gen_dag_graph()
-        for idx, gen_args in enumerate(gen_args_list)
-    ]
+    # source_selector = graph.SourceSelector({"rasp1": 4, "rasp2": 4, "rasp3": 4})
+    # gen_args_list = [
+    #     {
+    #         "total_rank": random.randint(7, 7),
+    #         "max_node_per_rank": random.randint(2, 2),
+    #         "max_predecessors": random.randint(2, 2),
+    #         # "mi_cb": lambda: int(math.pow(10, (random.random() * 1) + 0)),
+    #         "mi_cb": lambda: 1,
+    #         "memory_cb": lambda: int(2e8),
+    #         # "unit_size_cb": lambda: int(math.pow(10, (random.random() * 1) + 4)),
+    #         # "unit_rate_cb": lambda: int(math.pow(10, (random.random() * 1) + 1)),
+    #         "unit_size_cb": lambda r: random.randint(20000, 50000)
+    #         / (math.pow(2, r - 1)),
+    #         "unit_rate_cb": lambda: random.randint(10, 20),
+    #         "source_hosts": source_selector,
+    #         "sink_hosts": ["cloud1"],
+    #     }
+    #     for _ in range(6)
+    # ]
+    # graph_list = [
+    #     graph.GraphGenerator("g" + str(idx), **gen_args).gen_dag_graph()
+    #     for idx, gen_args in enumerate(gen_args_list)
+    # ]
     # nx.draw(graph_list[0].g)
-    # f = open("../../cases/a.yaml")
-    # graph_list = graph.ExecutionGraph.load_all(f)
-    # f.close()
-
-    with open("../../cases/a.yaml", "w") as f:
-        graph.ExecutionGraph.save_all(graph_list, f)
-
-    sc.topo.clear_occupied()
-    dynamic_scheduler = sch.DynamicScheduler(sc)
-    dynamic_scheduler.schedule_multiple(graph_list)
-    print()
+    f = open("../../cases/a.yaml")
+    graph_list = graph.ExecutionGraph.load_all(f)
+    f.close()
     # return
+
+    # with open("../../cases/a.yaml", "w") as f:
+    #     graph.ExecutionGraph.save_all(graph_list, f)
     
     sc.topo.clear_occupied()
     flow_scheduler = sch.FlowScheduler(sc)
@@ -77,6 +72,11 @@ def run():
     # print(sum(flow_bp.values()) / len(flow_bp))
     print()
 
+    sc.topo.clear_occupied()
+    dynamic_scheduler = sch.DynamicScheduler(sc)
+    dynamic_scheduler.schedule_multiple(graph_list, flow_result_list)
+    print()
+    
     sc.topo.clear_occupied()
     all_cloud_scheduler = sch.RandomScheduler(sc)
     all_cloud_scheduler.logger.setLevel(logging.INFO)

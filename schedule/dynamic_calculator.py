@@ -10,14 +10,48 @@ from topo import Scenario
 from pyscipopt import Model, quicksum
 from itertools import product
 
+def gen_data_file(f: typing.TextIO, data: typing.Dict, param_list: typing.List):
+    f.write("data;\n")
+    def write_variable(name: str, data):
+        f.write("param %s := %s;\n"%(name, str(data)))
+    def write_array(name: str, data: typing.List):
+        f.write("param %s :="%name)
+        for i, x in enumerate(data):
+            f.write("\n\t%d %s"%(i, str(x)))
+        f.write(";\n")
+    def write_matrix(name: str, data: typing.List):
+        f.write("param %s : "%name)
+        b = len(data[0])
+        for i in range(b):
+            f.write("%d "%i)
+        f.write(":=")
+        for i, l in enumerate(data):
+            f.write("\n\t%d "%i)
+            for x in l:
+                f.write("%s "%str(x))
+        f.write(";\n")
+    for name in param_list:
+        content = data.get(name)
+        if type(content) != list:
+            write_variable(name, content)
+        elif type(content[0]) != list:
+            write_array(name, content)
+        else:
+            write_matrix(name, content)
+    f.write("end;\n")
+    
 def parse_data(graph_list: typing.List[ExecutionGraph], 
     scenario: Scenario, data:dict):
     graph_merge = nx.DiGraph()
     for graph in graph_list:
-        graph_merge = nx.disjoint_union(graph_merge, graph.g)
+        graph_merge = nx.union(graph_merge, graph.g)
     # 基础信息
     flow_node_num = len(graph_merge.nodes)
     flow_edge_num = len(graph_merge.edges)
+    flow_node_uuid = [e for e in graph_merge.nodes]
+    flow_node_index = dict()
+    for i, uuid in enumerate(flow_node_uuid):
+        flow_node_index[uuid] = i
     flow_incidence = nx.incidence_matrix(G=graph_merge, oriented=True).toarray().astype(np.int32).tolist()
     for row in flow_incidence:
         for i in range(len(row)):
@@ -46,9 +80,9 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
                 continue
             elif flow_incidence[node][edge] == -1:
                 in_flow_edge[node][edge] = 1
-                flow_endpoint[edge][1] = node     
+                flow_endpoint[edge][1] = node
                 op_in_edge[node].append(edge)
-                op_indegree[node] = op_indegree[node] + 1
+                op_indegree[node] += 1
             else:
                 out_flow_edge[node][edge] = 1
                 flow_endpoint[edge][0] = node
@@ -67,8 +101,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             sink_in_urate_sum = sink_in_urate_sum + in_urate_sum[node]
         if in_urate_sum[node] != 0:
             in_urate_sum_reciprocal[node] = 1 / in_urate_sum[node]
-        in_urate_sum_reciprocal[node] = np.format_float_positional(in_urate_sum_reciprocal[node], trim='-')
-    print("sink_in_urate_sum: {}".format(sink_in_urate_sum))
+    # print("sink_in_urate_sum: {}".format(sink_in_urate_sum))
     
     in_flow_sum = [0 for _ in range(flow_node_num)]
     in_flow_sum_reciprocal = [0 for _ in range(flow_node_num)]
@@ -83,8 +116,7 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             sink_in_flow_sum = sink_in_flow_sum + in_flow_sum[node]
         if in_flow_sum[node] != 0:
             in_flow_sum_reciprocal[node] = 1 / in_flow_sum[node]
-        in_flow_sum_reciprocal[node] = np.format_float_positional(in_flow_sum_reciprocal[node], trim='-')
-    print("sink_in_flow_sum: {}".format(sink_in_flow_sum))
+    # print("sink_in_flow_sum: {}".format(sink_in_flow_sum))
     
     # 实际网络相关
     net = scenario.topo.g
@@ -95,11 +127,11 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
         u, v = edge
         edge_index[edge] = i
         edge_index[(v, u)] = i
-    node_uuid = [None] * net_node_num
+    net_node_uuid = [None] * net_node_num
     node_index = dict()
     for i, uuid in enumerate(net.nodes):
         # print(uuid)
-        node_uuid[i] = uuid
+        net_node_uuid[i] = uuid
         node_index[uuid] = i
     # u和v之间的path，下标为u*net_node_num + v
     net_path_num = net_node_num * net_node_num
@@ -130,8 +162,8 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             if u == v:
                 continue
             path = u * net_node_num + v
-            p = nx.all_simple_paths(net, source=node_uuid[u], target=node_uuid[v])
-            # print(u, v, node_uuid[u], node_uuid[v], p)
+            p = nx.all_simple_paths(net, source=net_node_uuid[u], target=net_node_uuid[v])
+            # print(u, v, net_node_uuid[u], net_node_uuid[v], p)
             p = list(map(nx.utils.pairwise, p))[0]
             for edge in list(p):
                 net_edge_in_path[edge_index[edge]][path] = 1
@@ -146,7 +178,6 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
             mips_positive.append(1)
         else:
             mips_positive.append(0)
-        mips_reciprocal[i] = np.format_float_positional(mips_reciprocal[i], trim='-')
     cores = [e[1] for e in net.nodes.data("cores")]
     cores_reciprocal = [0 for _ in range(net_node_num)]
     for i, core in enumerate(cores):
@@ -167,14 +198,25 @@ def parse_data(graph_list: typing.List[ExecutionGraph],
                 net_node_edge_index[node_index[node]] = i 
     
     mips = [e[1] for e in net.nodes.data("mips")]
-    
+
+    # print([(n, i) for i, n in enumerate(net.nodes)])
+    # print([(n, i) for i, n in enumerate(graph_merge.nodes)])
+    # print([(n, i) for i, n in enumerate(graph_merge.edges)])
+    # print(net.edges)
+    # print("post restriction")
+    # for flow_node in range(flow_node_num):
+    #     for net_node in range(net_node_num):
+    #         if flow_node_restr[flow_node][net_node] == 1:
+    #             print(flow_node_uuid[flow_node], net_node_uuid[net_node])
+    net_path_endpoint = path_endpoint
     param_list = [
         "flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "urate", "flow_node_is_sink", "tuple_size",
         "in_flow_edge", "out_flow_edge", "flow_edge_s", "net_node_num", "net_edge_num", "net_path_num", "edge_domain_num",
         "flow_node_restr", "net_path_origin", "net_path_dest", "net_edge_in_path", "bandwidth", 
         "net_edge_intr_lat", "mips_reciprocal", "mips_positive", "cores", "slot", "net_node_in_edge", "net_node_in_cloud",
-        "flow_endpoint", "path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_urate_sum", "op_in_edge", "op_out_edge",
-        "in_urate_sum", "in_urate_sum_reciprocal", "in_flow_sum", "in_flow_sum_reciprocal", "op_indegree", "mips", "cores_reciprocal"
+        "flow_endpoint", "path_endpoint", "net_path_endpoint", "net_edge_of_path", "sources", "sinks", "sink_in_urate_sum", "op_in_edge", "op_out_edge",
+        "in_urate_sum", "in_urate_sum_reciprocal", "in_flow_sum", "in_flow_sum_reciprocal", "op_indegree", "mips", "cores_reciprocal",
+        "flow_node_uuid", "net_node_uuid", "node_index", "flow_node_index"
     ]
     items = locals()
     for name in param_list:
@@ -227,16 +269,10 @@ def get_lat_min(data: dict) -> float:
         for flow_edge in range(flow_edge_num):
             net_edge_in_flow_edge[net_edge, flow_edge] = model.addVar(vtype="BINARY")
         net_edge_flow_sum[net_edge] = model.addVar(vtype="CONTINUOUS")
-    out_flow_edge = data["out_flow_edge"]
-    in_flow_edge = data["in_flow_edge"]
     op_in_edge = data["op_in_edge"]
-    op_out_edge = data["op_in_edge"]
     flow_endpoint = data["flow_endpoint"]
     net_path_endpoint = data["path_endpoint"]
-    net_path_origin = data["net_path_origin"]
-    net_path_dest = data["net_path_dest"]
     net_edge_in_path = data["net_edge_in_path"]
-    net_edge_of_path = data["net_edge_of_path"]
     flow = data["flow"]
     urate = data["urate"]
     for flow_edge in range(flow_edge_num):
@@ -343,7 +379,7 @@ def get_lat_min(data: dict) -> float:
     flow_node_restr = data["flow_node_restr"]
     for flow_node in range(flow_node_num):
         for net_node in range(net_node_num):
-            model.addCons(f[flow_node, net_node] * flow_node_restr[flow_node][net_node] == f[flow_node, net_node])
+            model.addCons(f[flow_node, net_node] <= flow_node_restr[flow_node][net_node])
     # 计算节点插槽数量限制
     slot = data["slot"]
     for net_node in range(net_node_num):
@@ -357,14 +393,35 @@ def get_lat_min(data: dict) -> float:
         model.addCons(quicksum(f[flow_node, net_node] * mips_positive[net_node] for net_node in range(net_node_num)) >= 1)
     # 目标
     model.setObjective(lat, sense="minimize")
-    # model.hideOutput()
-    model.setParam('limits/time', 600)
+    model.hideOutput()
+    model.setParam('limits/time', 30)
     model.optimize()
     sol = model.getBestSol()
     lat_min = sol[lat]
     data["lat_min"] = lat_min
     print("lat_min {}".format(lat_min))
     return lat_min
+
+def glpk_main(data: dict):
+    param_list = ["flow_node_num", "flow_edge_num", "flow_incidence", "mi", "flow", "urate", "flow_node_is_sink", "tuple_size",
+                  "flow_endpoint", "in_flow_edge", "in_urate_sum_reciprocal", "net_node_num", "net_edge_num", "net_path_num", 
+                  "edge_domain_num", "flow_node_restr", "net_path_endpoint", "net_edge_in_path", "bandwidth", "net_edge_intr_lat",
+                  "mips_reciprocal", "mips_positive", "cores", "cores_reciprocal", "slot", "net_node_in_edge", "net_node_in_cloud",
+                  "lat_min", "flow_min"]
+    with open("../glpk/data/main_data", "w") as f:
+        gen_data_file(f, data, param_list)
+    # result = subprocess.run(
+    #         ["glpsol", "--model", "../glpk/model/main.mod", "--data", "../glpk/data/main_data"
+    #          , "--tmlim", "30"
+    #         ],
+    #         capture_output=True
+    #     )
+    # output = result.stdout.decode("ASCII")
+    # lines = output.split("\n")
+    # lat = lines[-5].strip()
+    # flow = lines[-4].strip()
+    # obj = lines[-3].strip()
+    # print(lat, flow, obj)
 
 # 计算特定部署方案的目标值
 def obj(f: typing.List,

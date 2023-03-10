@@ -193,5 +193,7 @@ class Topology:
         n["memory_lock"].acquire()
         if n["occupied"] + slot_required <= n["slots"]:
             valid = True
+        if not valid:
+            print(n["occupied"], slot_required, n["slots"])
         n["memory_lock"].release()
         return valid

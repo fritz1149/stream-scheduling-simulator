@@ -74,6 +74,7 @@ class Scheduler(ABC):
             #     host.node.slots - host.node.occupied,
             # )
             if not domain.topo.slot_filter(count, host.node.uuid):
+                print(domain.name, hostname, count)
                 return False
         return True
 

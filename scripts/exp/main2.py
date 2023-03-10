@@ -46,22 +46,23 @@ def run():
             graph.MultiSourceGraphGenerator("g" + str(idx), **gen_args).gen_dag_graph()
             for idx, gen_args in enumerate(gen_args_list)
         ]
-    graph_count = 12
+    graph_count = 20
     source_selector_dict = {"edge0": {'e0rasp1': 10, 'e0rasp2': 10, 'e0rasp3': 10},
                     "edge1": {'e1rasp1': 10, 'e1rasp2': 10, 'e1rasp3': 10}}
-    graph_list = gen_graphs(graph_count, source_selector_dict)
     
-    # with open("../../cases/a.yaml", "w") as f:
-    #     graph.ExecutionGraph.save_all(graph_list, f)
-    f = open("../../cases/a.yaml")
-    graph_list = graph.ExecutionGraph.load_all(f)
-    f.close()
+    graph_list = gen_graphs(graph_count, source_selector_dict)
+    with open("../../cases/a.yaml", "w") as f:
+        graph.ExecutionGraph.save_all(graph_list, f)
+    # f = open("../../cases/a.yaml")
+    # graph_list = graph.ExecutionGraph.load_all(f)
+    # f.close()
     
     
     # print(graph_list)
     for g in graph_list:
         print(g.uuid, ":")
         print([(n[0], n[1]["color"], n[1]["type"]) for n in g.g.nodes.data()])
+        print([(n[0], n[1]["domain_constraint"].get("host"))for n in g.g.nodes.data()])
         # print(g.g.nodes.data("color"))
         # print(g.g.nodes.data("type"))
         print(g.g.edges)

@@ -6,3 +6,4 @@ from .result import SchedulingResult, SchedulingResultStatus
 from .sbon_scheduler import SBONScheduler
 from .scheduler import RandomScheduler, Scheduler
 from .dynamic_scheduler import DynamicScheduler
+from .multiedge_flow_scheduler import MultiEdgeFlowScheduler

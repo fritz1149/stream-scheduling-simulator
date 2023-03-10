@@ -98,6 +98,7 @@ class FlowScheduler(Scheduler):
         ]
 
         # NOTE group graphs by edge domains
+        # NOTE 这个位置原算法将源不在一个域内的流式计算图直接pass了，新算法需要能处理这种情况
         edge_domain_map: typing.Dict[str, typing.List[SourcedGraph]] = defaultdict(list)
         for sg in sourced_graphs:
             edge_domain = self.if_source_in_single_domain(sg.g)
@@ -148,11 +149,12 @@ class FlowScheduler(Scheduler):
 
     @classmethod
     def cloud_edge_cutting(
-        cls, sg_list: typing.List[SourcedGraph], edge_domain: Domain
+        cls, sg_list: typing.List[SourcedGraph], edge_domain: Domain,
+        multiedge: bool = False
     ) -> typing.Tuple[typing.List[ExecutionGraph], typing.List[ExecutionGraph]]:
         # NOTE generate cut options, if no option provided, skip this edge domain
         graph_cut_options: typing.List[typing.List[CutOption]] = [
-            sorted(gen_cut_options(sg.g), key=lambda o: o.flow, reverse=False)
+            sorted(gen_cut_options(sg.g, multiedge), key=lambda o: o.flow, reverse=False)
             for sg in sg_list
         ]
         # for option in graph_cut_options[0]:
@@ -195,6 +197,7 @@ class FlowScheduler(Scheduler):
                 sg.g.sub_graph(options[s_idx].t_cut, gen_uuid())
                 for sg, options, s_idx in zip(sg_list, graph_cut_options, solution)
             ]
+        
         return s_graph_list, t_graph_list
 
 
@@ -204,19 +207,25 @@ class CutOption(typing.NamedTuple):
     flow: int
 
 
-def gen_cut_options(g: ExecutionGraph) -> typing.List[CutOption]:
+def gen_cut_options(g: ExecutionGraph, multiedge: bool) -> typing.List[CutOption]:
     options: typing.List[CutOption] = []
     # s_cut, t_cut = min_cut(g)
-    s_cut, t_cut = min_cut2(g)
+    s_cut, t_cut = min_cut2(g, multiedge)
+    # print("first cut:")
+    # print(s_cut)
+    # print(t_cut)
     flow = cross_bd(g, s_cut, t_cut)
     options.append(CutOption(s_cut, t_cut, flow))
 
     while len(s_cut) > 1:
         sub_graph = g.sub_graph(s_cut, gen_uuid())
+        if sub_graph.contain_only_sources():
+            break
         # s_cut, _ = min_cut(sub_graph)
-        s_cut, _ = min_cut2(sub_graph)
+        s_cut, _ = min_cut2(sub_graph, multiedge)
+        last_len = len(s_cut)
         t_cut = set([v.uuid for v in g.get_vertices()]) - s_cut
         flow = cross_bd(g, s_cut, t_cut)
         options.append(CutOption(s_cut, t_cut, flow))
-
+    
     return options

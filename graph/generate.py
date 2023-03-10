@@ -30,7 +30,7 @@ class SourceSelector:
                 return k
             idx -= self.sources[k]
         assert False
-
+        
 
 class GraphGenerator:
     def __init__(self, name: str, **kwargs) -> None:
@@ -239,8 +239,7 @@ class GraphGenerator:
         if len(selected) == 0:
             selected.append(random.choice(nodes[0]))
         return selected
-
-
+        
 class ParameterGenerator:
     def __init__(self, **kwargs) -> None:
         self.gen_args = kwargs

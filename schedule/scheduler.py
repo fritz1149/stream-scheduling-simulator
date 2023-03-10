@@ -44,6 +44,17 @@ class Scheduler(ABC):
             return self.scenario.find_domain(list(domain_set)[0])
         return None
 
+    def domains_of_sources(self, g: ExecutionGraph) -> typing.List[Domain]:
+        domain_set = set()
+        for s in g.get_sources():
+            for d in self.scenario.get_edge_domains():
+                if d.find_host(s.domain_constraint["host"]) is not None:
+                    domain_set.add(d.name)
+        domain_list = []
+        for domain_name in domain_set:
+            domain_list.append(self.scenario.find_domain(domain_name))
+        return domain_list
+    
     def if_source_fit(
         self, graph_list: typing.List[ExecutionGraph], domain: Domain
     ) -> bool:
@@ -56,6 +67,7 @@ class Scheduler(ABC):
             host = domain.find_host(hostname)
             if host is None:
                 return False
+                # continue
             # self.logger.info(
             #     "required: %d; remaining: %d",
             #     count,

@@ -6,7 +6,8 @@ import IPython
 from graph import ExecutionGraph
 from utils import gen_uuid
 
-MAX_EDGE_CAPACITY = int(1e20)
+MAX_EDGE_CAPACITY_BIG = int(1e20) + 5
+MAX_EDGE_CAPACITY_SMALL = int(1e20)
 
 
 class FlowGraphNode(NamedTuple):
@@ -106,7 +107,7 @@ class FlowGraph:
         return reachable_set
 
 
-def min_cut(g: ExecutionGraph) -> typing.Tuple[typing.Set[str], typing.Set[str]]:
+def min_cut(g: ExecutionGraph, multiedge: bool = False) -> typing.Tuple[typing.Set[str], typing.Set[str]]:
     nodes: typing.Dict[str, FlowGraphNode] = {
         v.uuid: FlowGraphNode([], []) for v in g.get_vertices()
     }
@@ -132,7 +133,14 @@ def min_cut(g: ExecutionGraph) -> typing.Tuple[typing.Set[str], typing.Set[str]]
     nodes[fake_source] = FlowGraphNode([], [])
     nodes[fake_sink] = FlowGraphNode([], [])
     for s in g.get_in_vertices():
-        edges.append(FlowGraphEdge(fake_source, s.uuid, MAX_EDGE_CAPACITY, 0))
+        if multiedge:
+            if s.type == "operator":
+                print(g.g.nodes.data("type"))
+            assert s.type != "operator"
+            cap = MAX_EDGE_CAPACITY_SMALL if s.type == "sink" else MAX_EDGE_CAPACITY_BIG
+        else:
+            cap = MAX_EDGE_CAPACITY_BIG
+        edges.append(FlowGraphEdge(fake_source, s.uuid, cap, 0))
         nodes[fake_source].out_edges.append(index)
         nodes[s.uuid].in_edges.append(index)
         index += 1
@@ -141,23 +149,47 @@ def min_cut(g: ExecutionGraph) -> typing.Tuple[typing.Set[str], typing.Set[str]]
         nodes[fake_source].in_edges.append(index)
         index += 1
     out_vertices_with_bd = sorted(
-        [(v, v.upstream_bd) for v in g.get_out_vertices()], key=lambda e: e[1]
+        [(v, v.upstream_bd, v.type) for v in g.get_out_vertices()], key=lambda e: e[1]
     )
-    best_v = out_vertices_with_bd[0][0]
-    for s in g.get_out_vertices():
-        if s.uuid != best_v.uuid and s.type != "sink":
-            cap = s.downstream_bd
-        else:
-            cap = MAX_EDGE_CAPACITY
-        # cap = MAX_EDGE_CAPACITY
-        edges.append(FlowGraphEdge(s.uuid, fake_sink, cap, 0))
-        nodes[s.uuid].out_edges.append(index)
-        nodes[fake_sink].in_edges.append(index)
-        index += 1
-        edges.append(FlowGraphEdge(fake_sink, s.uuid, 0, 0))
-        nodes[fake_sink].out_edges.append(index)
-        nodes[s.uuid].in_edges.append(index)
-        index += 1
+    best_v, best_upstream, best_v_type = out_vertices_with_bd[0]
+    if best_v_type != "operator":
+        for v, upstream, v_type in out_vertices_with_bd:
+            if v_type == "operator":
+                best_v, best_upstream, best_v_type = v, upstream, v_type
+                break
+    if not multiedge:
+        for s in g.get_out_vertices():
+            if s.uuid != best_v.uuid and s.type != "sink":
+                cap = s.downstream_bd
+            else:
+                cap = MAX_EDGE_CAPACITY_BIG
+            # cap = MAX_EDGE_CAPACITY
+            edges.append(FlowGraphEdge(s.uuid, fake_sink, cap, 0))
+            nodes[s.uuid].out_edges.append(index)
+            nodes[fake_sink].in_edges.append(index)
+            index += 1
+            edges.append(FlowGraphEdge(fake_sink, s.uuid, 0, 0))
+            nodes[fake_sink].out_edges.append(index)
+            nodes[s.uuid].in_edges.append(index)
+            index += 1
+    else:
+        for s in g.get_cloud_vertices():
+            if s.type == "sink":
+                cap = MAX_EDGE_CAPACITY_BIG
+            elif s.type =="source":
+                cap = MAX_EDGE_CAPACITY_SMALL
+            elif s.uuid != best_v.uuid:
+                cap = s.downstream_bd
+            else:
+                cap = MAX_EDGE_CAPACITY_BIG
+            edges.append(FlowGraphEdge(s.uuid, fake_sink, cap, 0))
+            nodes[s.uuid].out_edges.append(index)
+            nodes[fake_sink].in_edges.append(index)
+            index += 1
+            edges.append(FlowGraphEdge(fake_sink, s.uuid, 0, 0))
+            nodes[fake_sink].out_edges.append(index)
+            nodes[s.uuid].in_edges.append(index)
+            index += 1
 
     flow_graph = FlowGraph(nodes, edges)
     while True:

@@ -3,7 +3,7 @@ import typing
 import networkx as nx
 import yaml
 from networkx.algorithms.dag import topological_sort
-from utils import DisjointSet
+from utils import DisjointSet, gen_uuid
 
 from .vertex import Vertex
 
@@ -40,6 +40,7 @@ class ExecutionGraph:
             memory=v.memory,
             upstream_bd=v.upstream_bd,
             downstream_bd=v.downstream_bd,
+            color=v.color
         )
 
     def connect(
@@ -146,6 +147,33 @@ class ExecutionGraph:
             for i, vids in enumerate(vertex_sets.values())
         ]
 
+    def color_graph(self):
+        for v in topological_sort(self.g):
+            for u, _ in self.g.in_edges(v):
+                if self.g.nodes[v]["color"] is None:
+                    self.g.nodes[v]["color"] = self.g.nodes[u]["color"]
+                elif self.g.nodes[v]["color"] == "cloud":
+                    break
+                elif self.g.nodes[v]["color"] != self.g.nodes[u]["color"]:
+                    self.g.nodes[v]["color"] = "cloud"
+                    break
+                
+    def color_sub_graph(self, color: str):
+        vids = [n[0] for n in self.g.nodes.data("color") if n[1] == color or n[1] == "cloud"]
+        return self.sub_graph(vids, gen_uuid())
+    
+    def contain_only_sources(self):
+        # print("contain only sources")
+        # print(self.g.nodes.data("type"))
+        for is_source in [n[1] == "source" for n in self.g.nodes.data("type")]:
+            if not is_source:
+                return False
+        return True
+        
+    def get_cloud_vertices(self) -> typing.List[Vertex]:
+        return [v for v in self.get_vertices() if self.g.out_degree(v.uuid) == 0 
+                                    or self.g.nodes[v.uuid]["color"] == "cloud"]
+        
     def copy(self, uuid: str):
         return self.sub_graph(set([v.uuid for v in self.get_vertices()]), uuid)
 

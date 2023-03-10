@@ -10,7 +10,7 @@ class Vertex:
 
     def __repr__(self) -> str:
         return self.__str__()
-
+    
     @classmethod
     def from_spec(
         cls,
@@ -21,6 +21,7 @@ class Vertex:
         out_unit_rate: float,  # per second
         mi: int,
         memory: int,
+        color = None,
     ):
         data = {
             "type": type,
@@ -31,6 +32,7 @@ class Vertex:
             "memory": memory,
             "upstream_bd": 0,
             "downstream_bd": 0,
+            "color": color,
         }
         return cls(uuid, data)
 
@@ -69,3 +71,7 @@ class Vertex:
     @property
     def downstream_bd(self) -> int:
         return self.data["downstream_bd"]
+    
+    @property
+    def color(self) -> str:
+        return self.data.get("color")

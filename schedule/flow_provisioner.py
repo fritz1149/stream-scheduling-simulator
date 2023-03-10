@@ -348,19 +348,36 @@ class TopologicalProvisioner(Provisioner):
         return [self.gather_scheduling_result(g) for g in graph_list]
 
     def initial_graph_placement(self, g: ExecutionGraph) -> None:
-        host_set: typing.Set[Host] = set()
+        host_set: typing.Set[str] = set()
+        host_dict: typing.Dict[str, typing.List[Vertex]] = dict()
+        # print("initial_graph_placement")
+        # print(self.domain.host_lookup_table.keys())
         for s in g.get_sources():
             assert s.domain_constraint.get("host") is not None
             host = self.domain.find_host(s.domain_constraint["host"])
+            # print(s.uuid, s.domain_constraint["host"], host is None)
             assert host is not None
-            host_set.add(host)
-        assert len(host_set) <= 1
+            host_set.add(host.name)
+            if host_dict.get(host.name) is None:
+                host_dict[host.name] = []
+            host_dict[host.name].append(s)
+        # assert len(host_set) <= 1
         if len(host_set) == 0:
             node = random.choice(list(self.tree.name_lookup_map.values()))
+            node.add_unscheduled_graph(g.copy(g.uuid))
         else:
-            host = list(host_set)[0]
-            node = self.tree.get_node(host.name)
-        node.add_unscheduled_graph(g.copy(g.uuid))
+            g = g.copy(g.uuid)
+            host_list = list(host_set)
+            for i in range(1, len(host_list)):
+                host = host_list[i]
+                vertex_cut = set([n.uuid for n in host_dict[host]])
+                sub_graph = g.sub_graph(vertex_cut, gen_uuid())
+                node = self.tree.get_node(host)
+                node.add_unscheduled_graph(sub_graph)
+                for vertex in vertex_cut:
+                    g.remove_vertex(vertex)
+            node = self.tree.get_node(host_list[0])
+            node.add_unscheduled_graph(g)
 
     def rebalance(self) -> None:
         count = 0

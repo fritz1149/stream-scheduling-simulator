@@ -173,6 +173,12 @@ class ExecutionGraph:
     def get_cloud_vertices(self) -> typing.List[Vertex]:
         return [v for v in self.get_vertices() if self.g.out_degree(v.uuid) == 0 
                                     or self.g.nodes[v.uuid]["color"] == "cloud"]
+    
+    def get_sinks_and_cloud_vertices(self) -> typing.List[Vertex]:
+        return [v for v in self.get_vertices() if v.type == "sink" or v.color == "cloud"]
+    
+    def get_operators_colored_not_cloud(self) -> typing.List[Vertex]:
+        return [v for v in self.get_vertices() if v.type == "operator" and v.color != "cloud"]
         
     def copy(self, uuid: str):
         return self.sub_graph(set([v.uuid for v in self.get_vertices()]), uuid)

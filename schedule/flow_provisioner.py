@@ -7,7 +7,7 @@ from functools import reduce
 
 from graph import ExecutionGraph, Vertex
 from topo import Domain, Host, Node, Topology
-from utils import gen_uuid, get_logger, grouped_exactly_one_full_binpack
+from utils import gen_uuid, get_logger, grouped_exactly_one_full_binpack, grouped_exactly_one_nonfull_binpack
 
 from .provision import Provisioner
 from .result import SchedulingResult
@@ -54,6 +54,7 @@ class ProvisionNode:
         self.scheduled_vertices = []
         self.unscheduled_graphs = []
         self.logger = get_logger(self.__class__.__name__ + "[{}]".format(self.name))
+        self.debug = False
 
     def add_child(self, child) -> None:
         self.children.append(child)
@@ -80,6 +81,9 @@ class ProvisionNode:
             if scatter.unscheduled_graphs is not None:
                 for g in scatter.unscheduled_graphs:
                     self.add_unscheduled_graph(g)
+
+    def set_debug(self, debug):
+        self.debug = debug
 
     def step(
         self,
@@ -226,7 +230,12 @@ class ProvisionNode:
                 + [(len(vs), vs[len(vs) - 1].downstream_bd)]
                 for vs in topological_sorted_graphs
             ]
-            solution = grouped_exactly_one_full_binpack(child_slots, groups)
+            # solution = grouped_exactly_one_full_binpack(child_slots, groups)
+            solution = grouped_exactly_one_nonfull_binpack(child_slots, groups, True, self.debug)
+            if self.debug:
+                print("groups", groups)
+                print("solution", solution)
+                print("child_slots", child_slots)
             for graph, vertices, group, s_idx in zip(
                 self.unscheduled_graphs, topological_sorted_graphs, groups, solution
             ):
@@ -289,6 +298,8 @@ class ProvisionTree:
                 if v[0]:
                     node = self.name_lookup_map[k]
                     print(k, node.local_slots, node.node.occupied)
+            for k, n in self.name_lookup_map.items():
+                print(k, n.local_slots, n.node.occupied)
         updated = reduce(
             lambda i, j: i or j, [i[0] for i in node_step_map.values()], False
         )
@@ -311,10 +322,15 @@ class ProvisionTree:
                                 print("from {} to child", node_name)
             if step_result[1] is not None and node.parent is not None:
                 node.parent.gather_from_child(node.name, step_result[1])
+                if self.debug:
+                    print("to_parent", node.parent.name, node.parent.unscheduled_graphs)
             if step_result[2] is not None:
                 for child, scatter in zip(node.children, step_result[2]):
                     if scatter is not None:
                         child.gather_from_parent(scatter)
+                        if self.debug:
+                            print("to_child", child.name, child.unscheduled_graphs)
+                            child.set_debug(True)
         return True
 
     def traversal(self, f) -> None:

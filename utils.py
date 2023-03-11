@@ -58,7 +58,8 @@ class DisjointSet:
 
 
 def grouped_exactly_one_nonfull_binpack(
-    n_slot: int, groups: typing.List[typing.List[typing.Tuple[int, int]]]
+    n_slot: int, groups: typing.List[typing.List[typing.Tuple[int, int]]], 
+    max_capcity_mode: bool = False, debug: bool = False
 ) -> typing.List[int]:
     """arguments:
     n_slot -- binpack capacity
@@ -84,13 +85,21 @@ def grouped_exactly_one_nonfull_binpack(
                     dp[capacity] = dp[capacity - volume] + value
                     selected[capacity] = gid + 1
                     choices[gid, capacity] = eid
+
     valid_idx = np.where(selected == len(groups))[0]
-    backtrace = valid_idx[np.argmin(dp[valid_idx])]
+    backtrace = valid_idx[np.argmin(dp[valid_idx])] if not max_capcity_mode else valid_idx[-1]
     solution: typing.List[int] = [None for _ in range(len(groups))]
+    if debug:
+        print("max_capcity_mode:", max_capcity_mode)
+        print("dp:", dp)
+        print("selected:", selected)
+        print("choices:", choices)
+        print("valid_idx:", valid_idx, "backtrace:", backtrace)
     for gid in range(len(groups) - 1, -1, -1):
         assert choices[gid, backtrace] >= 0
         solution[gid] = choices[gid, backtrace]
         backtrace -= groups[gid][solution[gid]][0]
+        
     return solution
 
 
@@ -122,6 +131,8 @@ def grouped_exactly_one_full_binpack(
                     selected[capacity] = gid + 1
                     choices[gid, capacity] = eid
     # valid_idx = np.where(selected == len(groups))[0]
+    if selected[n_slot] != len(groups):
+        print("slots: {}, groups: {}".format(n_slot, groups))
     assert selected[n_slot] == len(groups)
     backtrace = n_slot
     # backtrace = valid_idx[-1]

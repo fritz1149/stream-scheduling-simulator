@@ -27,7 +27,7 @@ domains:
     spec:
       mips: 3000
       cores: 2
-      memory: 5
+      memory: 8
       labels:
         machine: rasp
         connector: robot
@@ -45,7 +45,7 @@ domains:
     spec:
       mips: 3000
       cores: 2
-      memory: 5
+      memory: 8
       labels:
         machine: rasp
         connector: robot

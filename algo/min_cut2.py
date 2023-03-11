@@ -134,10 +134,7 @@ def min_cut(g: ExecutionGraph, multiedge: bool = False) -> typing.Tuple[typing.S
     nodes[fake_sink] = FlowGraphNode([], [])
     for s in g.get_in_vertices():
         if multiedge:
-            if s.type == "operator":
-                print(g.g.nodes.data("type"))
-            assert s.type != "operator"
-            cap = MAX_EDGE_CAPACITY_SMALL if s.type == "sink" else MAX_EDGE_CAPACITY_BIG
+            cap = MAX_EDGE_CAPACITY_SMALL if s.type == "sink" or s.color == "cloud" else MAX_EDGE_CAPACITY_BIG
         else:
             cap = MAX_EDGE_CAPACITY_BIG
         edges.append(FlowGraphEdge(fake_source, s.uuid, cap, 0))
@@ -174,7 +171,7 @@ def min_cut(g: ExecutionGraph, multiedge: bool = False) -> typing.Tuple[typing.S
             index += 1
     else:
         for s in g.get_cloud_vertices():
-            if s.type == "sink":
+            if s.type == "sink" or s.color == "cloud":
                 cap = MAX_EDGE_CAPACITY_BIG
             elif s.type =="source":
                 cap = MAX_EDGE_CAPACITY_SMALL

@@ -3,5 +3,6 @@
 **/.ipynb_checkpoints
 **/*.png
 scripts/cut_exp/glpk/data
+scripts/multiedge-exp/glpk/data
 scripts/cut_exp/debug
 misc

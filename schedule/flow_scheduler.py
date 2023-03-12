@@ -207,7 +207,7 @@ class CutOption(typing.NamedTuple):
     flow: int
 
 
-def gen_cut_options(g: ExecutionGraph, multiedge: bool) -> typing.List[CutOption]:
+def gen_cut_options(g: ExecutionGraph, multiedge: bool = False) -> typing.List[CutOption]:
     options: typing.List[CutOption] = []
     # s_cut, t_cut = min_cut(g)
     s_cut, t_cut = min_cut2(g, multiedge)
@@ -223,7 +223,6 @@ def gen_cut_options(g: ExecutionGraph, multiedge: bool) -> typing.List[CutOption
             break
         # s_cut, _ = min_cut(sub_graph)
         s_cut, _ = min_cut2(sub_graph, multiedge)
-        last_len = len(s_cut)
         t_cut = set([v.uuid for v in g.get_vertices()]) - s_cut
         flow = cross_bd(g, s_cut, t_cut)
         options.append(CutOption(s_cut, t_cut, flow))

@@ -361,7 +361,9 @@ class TopologicalProvisioner(Provisioner):
         for g in graph_list:
             self.initial_graph_placement(g)
         self.rebalance()
-        return [self.gather_scheduling_result(g) for g in graph_list]
+        # return [self.gather_scheduling_result(g) for g in graph_list]
+        ret = [self.gather_scheduling_result(g) for g in graph_list]
+        return ret
 
     def initial_graph_placement(self, g: ExecutionGraph) -> None:
         host_set: typing.Set[str] = set()
